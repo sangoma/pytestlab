@@ -1,4 +1,4 @@
-from setuptools import setup
+import setuptools
 from setuptools.command.test import test as TestCommand
 
 
@@ -15,7 +15,7 @@ class PyTest(TestCommand):
         self.test_suite = True
 
     def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
+        # import here, cause outside the eggs aren't loaded
         import sys
         import shlex
         import pytest
@@ -24,25 +24,30 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-setup(name='lab',
-      version='0.0.0',
-      packages=['lab',
-                'lab.provider',
-                'lab.pycopia'],
-      install_requires=[
-          'six',
-          'click',
-          'pyxdg',
-          'python-etcd',
-          'srvlookup',
-          'ipaddress',
-          'pyroute2',
-          'sqlalchemy'
-      ],
-      tests_require=['pytest'],
-      cmdclass={'test': PyTest},
-      entry_points={
-          'console_scripts': ['labctl=lab.client:cli',
-                              'labagent=lab.agent:cli']
-      }
+setup_params = dict(
+    name='lab',
+    version='0.0.0',
+    packages=setuptools.find_packages(),
+    install_requires=[
+        'six',
+        'click',
+        'pyxdg',
+        'python-etcd',
+        'srvlookup',
+        'ipaddress',
+        'pyroute2',
+        'sqlalchemy',
+        'cffi'
+    ],
+    extras_require={
+        'build': ['pycparser', 'cffi'],
+    },
+    tests_require=['pytest'],
+    cmdclass={'test': PyTest},
+    entry_points={'console_scripts': ['labctl=lab.client:cli',
+                                      'labagent=lab.agent:cli']},
+    cffi_modules=["sangoma/trace/pcap_build.py:ffi"]
 )
+
+if __name__ == '__main__':
+    setuptools.setup(**setup_params)
