@@ -19,6 +19,8 @@ class CommonMixin(object):
 
     @property
     def view(self):
+        """A copy of this provider's data contents.
+        """
         data = {}
         for _, record in reversed(self.layers):
             data.update(record)
@@ -32,6 +34,8 @@ class Equipment(collections.MutableMapping, CommonMixin):
         for backend in providers:
             provider = backend('equipment', hostname, **kwargs)
             data = json.loads(provider.data) if provider.data else {}
+            logger.debug("data from {} backend is\n{}"
+                         .format(backend.name, data))
             self.layers.append((provider, data))
 
     def __getitem__(self, key):
@@ -71,6 +75,8 @@ class Environment(CommonMixin):
             self.layers.append((provider, data))
 
     def register(self, role, eq):
+        """Register a role by mapping it to equipment
+        """
         provider, data = self.layers[-1]
 
         try:
@@ -83,6 +89,8 @@ class Environment(CommonMixin):
         provider.push(pretty_json(data))
 
     def unregister(self, role, eq=None):
+        """Unregister a role by unmapping it from equipment
+        """
         provider, data = self.layers[-1]
 
         if eq:
