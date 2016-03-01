@@ -2,6 +2,7 @@ import io
 import sys
 import click
 import logging
+import os
 
 from provider import FileProvider, EtcdProvider
 from model import Environment, Equipment, pretty_json
@@ -50,11 +51,21 @@ pass_client = click.make_pass_decorator(Client)
 @click.group()
 @click.option('--discovery-srv', envvar='ETCD_DISCOVERY_SRV',
               metavar='DOMAIN', help='The etcd dns discovery domain')
-@click.option('--targets', '-t', metavar='TARGETS',
+@click.option('--targets', '-t', metavar='TARGETS[,...]',
               help='The data providers to query, comma seperated')
+@click.option('--loglevel', '-l', metavar='LEVEL',
+              help='Explicitly set the python logging level')
+@click.option('-v', '--verbose', count=True,
+              help='Verbosity level. Pass more then once to increase the '
+                   ' logging level')
 @click.pass_context
-def cli(ctx, discovery_srv, targets):
-    logging.basicConfig()
+def cli(ctx, discovery_srv, targets, loglevel, verbose):
+    # pager options
+    os.environ['LESS'] = 'FRSX'
+    # explicit level always overrides
+    logging.basicConfig(
+        level=loglevel.upper() if loglevel else max(40 - verbose * 10, 10)
+    )
 
     ctx.obj = Client(targets, domain=discovery_srv)
 
@@ -77,12 +88,12 @@ def equipment_get(client, env, verbose):
 
 
 @equipment.command('set')
-@click.argument('env')
+@click.argument('name')
 @click.argument('key')
 @click.argument('value')
 @pass_client
-def equipment_set(client, env, key, value):
-    entry = client.equipment(env)
+def equipment_set(client, name, key, value):
+    entry = client.equipment(name)
 
     entry[key] = value
     client.print_entry(entry, True)
