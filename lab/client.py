@@ -3,7 +3,6 @@ import sys
 import click
 import logging
 
-import pycopia
 from provider import FileProvider, EtcdProvider
 from model import Environment, Equipment, pretty_json
 
@@ -153,6 +152,8 @@ def import_data(client, source, type, name):
     if source != 'pycopia':
         click.echo('Unsupported importer', file=sys.stderr)
         sys.exit(1)
+
+    import pycopia
 
     db = pycopia.Importer(PYCOPIA_DB_URL)
     if type == 'environment':
