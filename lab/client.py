@@ -4,7 +4,7 @@ import click
 import logging
 import os
 
-from provider import FileProvider, EtcdProvider
+from provider import FileProvider, EtcdProvider, PostgresqlProvider
 from model import Environment, Equipment, pretty_json
 
 
@@ -15,13 +15,14 @@ logger = logging.getLogger(__name__)
 
 class Client(object):
     PROVIDERS = {provider.name: provider
-                 for provider in [FileProvider, EtcdProvider]}
+                 for provider in [FileProvider, EtcdProvider,
+                                  PostgresqlProvider]}
 
     def __init__(self, targets, **kwargs):
         self.kwargs = kwargs
 
         if not targets or targets.isspace():
-            self.providers = [FileProvider]
+            self.providers = [PostgresqlProvider, FileProvider]
         else:
             targets_set = iter(x.strip() for x in targets.split(','))
             self.providers = [Client.PROVIDERS[p] for p in targets_set]

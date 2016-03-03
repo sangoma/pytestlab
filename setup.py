@@ -45,6 +45,7 @@ setup_params = dict(
         'paramiko',
         'plumbum',
         'psycopg2',
+        'psycopg2',
         'pymongo',
         'pymysql',
         'pyroute2',
