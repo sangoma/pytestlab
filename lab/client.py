@@ -66,21 +66,22 @@ def cli(ctx, discovery_srv, targets, loglevel, verbose):
     logging.basicConfig(
         level=loglevel.upper() if loglevel else max(40 - verbose * 10, 10)
     )
-
     ctx.obj = Client(targets, domain=discovery_srv)
 
 
 @cli.group(help='Manipulate information on lab equipment')
-def equipment():
-    pass
+@click.argument('name')
+@click.pass_context
+def equipment(ctx, name):
+    ctx.name = name
 
 
 @equipment.command('get')
-@click.argument('env')
 @click.option('--verbose', '-v', is_flag=True)
 @pass_client
-def equipment_get(client, env, verbose):
-    entry = client.equipment(env)
+@click.pass_context
+def equipment_get(ctx, client, verbose):
+    entry = client.equipment(ctx.parent.name)
 
     if not entry:
         return
@@ -88,23 +89,23 @@ def equipment_get(client, env, verbose):
 
 
 @equipment.command('set')
-@click.argument('name')
 @click.argument('key')
 @click.argument('value')
 @pass_client
-def equipment_set(client, name, key, value):
-    entry = client.equipment(name)
+@click.pass_context
+def equipment_set(ctx, client, key, value):
+    entry = client.equipment(ctx.parent.name)
 
     entry[key] = value
     client.print_entry(entry, True)
 
 
 @equipment.command('rm')
-@click.argument('env')
 @click.argument('key', required=False)
 @pass_client
-def equipment_rm(client, env, key):
-    entry = client.equipment(env)
+@click.pass_context
+def equipment_rm(ctx, client, key):
+    entry = client.equipment(ctx.parent.name)
 
     if key and key in entry:
         del entry[key]
@@ -114,41 +115,43 @@ def equipment_rm(client, env, key):
 
 
 @cli.group(help='Manipulate and define lab environments')
-def environment():
-    pass
+@click.argument('name')
+@click.pass_context
+def env(ctx, name):
+    ctx.name = name
 
 
-@environment.command('get')
-@click.argument('env')
+@env.command('get')
 @click.option('--verbose', '-v', is_flag=True)
 @pass_client
-def environment_get(client, env, verbose):
-    entry = client.environment(env)
+@click.pass_context
+def env_get(ctx, client, verbose):
+    entry = client.environment(ctx.parent.name)
 
     if not entry:
         return
     client.print_entry(entry, verbose)
 
 
-@environment.command('register')
-@click.argument('env')
+@env.command('register')
 @click.argument('role')
 @click.argument('eq')
 @pass_client
-def environment_register(client, env, role, eq):
-    entry = client.environment(env)
+@click.pass_context
+def env_register(ctx, client, role, eq):
+    entry = client.environment(ctx.parent.name)
 
     entry.register(role, eq)
     client.print_entry(entry, True)
 
 
-@environment.command('unregister')
-@click.argument('env')
+@env.command('unregister')
 @click.argument('role')
 @click.argument('eq', required=False)
 @pass_client
-def environment_unregister(client, env, role, eq):
-    entry = client.environment(env)
+@click.pass_context
+def env_unregister(ctx, client, role, eq):
+    entry = client.environment(ctx.parent.name)
 
     entry.unregister(role, eq)
     client.print_entry(entry, True)
