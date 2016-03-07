@@ -55,6 +55,7 @@ setup_params = dict(
         'python-etcd',
         'python-redmine',
         'pyxdg',
+        'pyyaml',
         'rpyc',
         'six',
         'SQLAlchemy',

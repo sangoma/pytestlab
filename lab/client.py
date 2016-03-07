@@ -6,32 +6,47 @@ import os
 
 from provider import FileProvider, EtcdProvider, PostgresqlProvider
 from model import Environment, Equipment, pretty_json
+from config import load_lab_config
 
-
-PYCOPIA_DB_URL = 'postgresql://pycopia@sng-qa-db.qa.sangoma.local/pycopia'
 
 logger = logging.getLogger(__name__)
 
 
+def load_backends(config=None):
+    if not config:
+        config = load_lab_config().get('providers')
+
+    backends = []
+    for node in config:
+        name, kwargs = node.items()[0]
+        backend = Client.BACKENDS[name](kwargs)
+        backends.append(backend)
+    return backends
+
+
 class Client(object):
-    PROVIDERS = {provider.name: provider
-                 for provider in [FileProvider, EtcdProvider,
-                                  PostgresqlProvider]}
+    BACKENDS = {backend.name: backend
+                for backend in [FileProvider, EtcdProvider,
+                                PostgresqlProvider]}
 
-    def __init__(self, targets, **kwargs):
-        self.kwargs = kwargs
+    def __init__(self, targets):
+        self.config = load_lab_config()
 
-        if not targets or targets.isspace():
-            self.providers = [PostgresqlProvider, FileProvider]
-        else:
-            targets_set = iter(x.strip() for x in targets.split(','))
-            self.providers = [Client.PROVIDERS[p] for p in targets_set]
+        backends_config = self.config.get('providers')
+        if not backends_config:
+            if targets:
+                targets_set = set(x.strip() for x in targets.split(','))
+                backends_config = [{target: None} for target in targets_set]
+            else:
+                backends_config = [{'files': None}]
+
+        self.providers = load_backends(backends_config)
 
     def equipment(self, name):
-        return Equipment(name, self.providers, **self.kwargs)
+        return Equipment(name, self.providers)
 
     def environment(self, name):
-        return Environment(name, self.providers, **self.kwargs)
+        return Environment(name, self.providers)
 
     def print_entry(self, entry, verbose):
         report = io.StringIO()
@@ -50,24 +65,22 @@ pass_client = click.make_pass_decorator(Client)
 
 
 @click.group()
-@click.option('--discovery-srv', envvar='ETCD_DISCOVERY_SRV',
-              metavar='DOMAIN', help='The etcd dns discovery domain')
 @click.option('--targets', '-t', metavar='TARGETS[,...]',
-              help='The data providers to query, comma seperated')
+              help='The data providers to query, comma separated')
 @click.option('--loglevel', '-l', metavar='LEVEL',
               help='Explicitly set the python logging level')
 @click.option('-v', '--verbose', count=True,
               help='Verbosity level. Pass more then once to increase the '
                    ' logging level')
 @click.pass_context
-def cli(ctx, discovery_srv, targets, loglevel, verbose):
+def cli(ctx, targets, loglevel, verbose):
     # pager options
     os.environ['LESS'] = 'FRSX'
     # explicit level always overrides
     logging.basicConfig(
         level=loglevel.upper() if loglevel else max(40 - verbose * 10, 10)
     )
-    ctx.obj = Client(targets, domain=discovery_srv)
+    ctx.obj = Client(targets)
 
 
 @cli.group(help='Manipulate information on lab equipment')
@@ -170,7 +183,7 @@ def import_data(client, source, type, name):
 
     import pycopia
 
-    db = pycopia.Importer(PYCOPIA_DB_URL)
+    db = pycopia.Importer(client.config['pycopia']['database'])
     if type == 'environment':
         entry = client.environment(name)
         for roles in db.environments(name).itervalues():

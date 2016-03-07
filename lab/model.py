@@ -14,32 +14,33 @@ def pretty_json(data):
 
 class CommonMixin(object):
     def providers(self):
-        for layer, data in reversed(self.layers):
-            yield layer.name, data
+        for name, layer, data in reversed(self.layers):
+            yield name, data
 
     @property
     def view(self):
         """A copy of this provider's data contents.
         """
         data = {}
-        for _, record in reversed(self.layers):
+        for _, _, record in reversed(self.layers):
             data.update(record)
         return data
 
 
 class Equipment(collections.MutableMapping, CommonMixin):
-    def __init__(self, hostname, providers, **kwargs):
+    def __init__(self, hostname, providers):
         self.layers = []
         self.hostname = hostname
         for backend in providers:
-            provider = backend('equipment', hostname, **kwargs)
+            logger.debug("reading equipment {} from "
+                         "{}".format(hostname, backend.name))
+
+            provider = backend.get('equipment', hostname)
             data = json.loads(provider.data) if provider.data else {}
-            logger.debug("data from {} backend is\n{}"
-                         .format(backend.name, data))
-            self.layers.append((provider, data))
+            self.layers.append((backend.name, provider, data))
 
     def __getitem__(self, key):
-        for _, data in self.layers:
+        for _, _, data in self.layers:
             try:
                 return data[key]
             except KeyError:
@@ -47,12 +48,12 @@ class Equipment(collections.MutableMapping, CommonMixin):
         raise KeyError(key)
 
     def __setitem__(self, key, value):
-        provider, data = self.layers[-1]
+        _, provider, data = self.layers[-1]
         data[key] = value
         provider.push(pretty_json(data))
 
     def __delitem__(self, key):
-        provider, data = self.layers[-1]
+        _, provider, data = self.layers[-1]
         del data[key]
         provider.push(pretty_json(data))
 
@@ -64,20 +65,22 @@ class Equipment(collections.MutableMapping, CommonMixin):
 
 
 class Environment(CommonMixin):
-    def __init__(self, name, providers, **kwargs):
+    def __init__(self, name, providers):
         self.layers = []
         self._providers = providers
-        self._kwargs = kwargs
 
         for backend in providers:
-            provider = backend('environment', name, **kwargs)
+            logger.debug("reading environment {} from "
+                         "{}".format(name, backend.name))
+
+            provider = backend.get('environment', name)
             data = json.loads(provider.data) if provider.data else {}
-            self.layers.append((provider, data))
+            self.layers.append((backend.name, provider, data))
 
     def register(self, role, eq):
         """Register a role by mapping it to equipment
         """
-        provider, data = self.layers[-1]
+        _, provider, data = self.layers[-1]
 
         try:
             roles = set(data[role])
@@ -91,7 +94,7 @@ class Environment(CommonMixin):
     def unregister(self, role, eq=None):
         """Unregister a role by unmapping it from equipment
         """
-        provider, data = self.layers[-1]
+        _, provider, data = self.layers[-1]
 
         if eq:
             data[role].remove(eq)
@@ -102,8 +105,7 @@ class Environment(CommonMixin):
         provider.push(pretty_json(data))
 
     def __getitem__(self, key):
-        return [Equipment(x, self._providers, **self._kwargs)
-                for x in self.view[key]]
+        return [Equipment(x, self._providers) for x in self.view[key]]
 
     def get(self, key, default=None):
         try:

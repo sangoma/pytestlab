@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import posixpath
 import srvlookup
 import etcd
-
 from .common import ProviderError
 
 
@@ -19,27 +18,15 @@ def connect(domain):
         raise RuntimeError("Failed to connect to etcd: {}".format(e))
 
 
-class EtcdProvider(object):
-    name = 'etcd'
-
-    def __init__(self, *path, **kwargs):
-        domain = kwargs.get('domain', None)
-        if not domain:
-            raise RuntimeError('No discovery domain specified')
-
+class Record(object):
+    def __init__(self, client, *path):
+        self.client = client
         self.path = posixpath.join('lab', 'sangoma', 'v1', *path)
-        try:
-            records = srvlookup.lookup('etcd-server', domain=domain)
-        except srvlookup.SRVQueryFailure as e:
-            raise ProviderError("Failed to find etcd-server SRV record")
 
         try:
-            self.client = etcd.Client(host=records[0].host, port=2379)
             self.result = self.client.read(self.path)
-        except etcd.EtcdKeyNotFound as e:
+        except etcd.EtcdKeyNotFound:
             self.result = None
-        except etcd.EtcdException as e:
-            raise ProviderError("Failed to connect to etcd: {}".format(e))
 
     @property
     def data(self):
@@ -51,3 +38,25 @@ class EtcdProvider(object):
             self.client.update(self.result)
         else:
             self.client.write(self.path, data)
+
+
+class EtcdProvider(object):
+    name = 'etcd'
+
+    def __init__(self, config):
+        domain = config.get('discovery-srv', None)
+        if not domain:
+            raise RuntimeError('No discovery domain specified')
+
+        try:
+            records = srvlookup.lookup('etcd-server', domain=domain)
+        except srvlookup.SRVQueryFailure as e:
+            raise ProviderError("Failed to find etcd-server SRV record")
+
+        try:
+            self.client = etcd.Client(host=records[0].host, port=2379)
+        except etcd.EtcdException as e:
+            raise ProviderError("Failed to connect to etcd: {}".format(e))
+
+    def get(self, *path):
+        return Record(self.client, *path)
