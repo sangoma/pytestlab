@@ -33,7 +33,6 @@ setup_params = dict(
         # the requirements file.
         'beautifulsoup4',
         'bs4',
-        'cffi',
         'click',
         'colorlog',
         'contextlib2',
@@ -43,7 +42,6 @@ setup_params = dict(
         'jenkinsapi',
         'libarchive',
         'lxml',
-        'numpy',
         'paramiko',
         'plumbum',
         'psycopg2',
@@ -57,7 +55,6 @@ setup_params = dict(
         'python-redmine',
         'pyxdg',
         'rpyc',
-        'scipy',
         'six',
         'SQLAlchemy',
         'srvlookup',
