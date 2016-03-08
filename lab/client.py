@@ -180,6 +180,9 @@ def import_data(client, source, type, name):
         entry = client.equipment(name)
         for key, value in db.equipment(name).iteritems():
             entry[key] = value
+    else:
+        click.echo("Unsupported type {}".format(type), file=sys.stderr)
+        sys.exit(1)
 
     client.print_entry(entry, True)
 
