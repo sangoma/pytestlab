@@ -28,6 +28,7 @@ class FileProvider(object):
     name = 'files'
 
     def __init__(self, config):
+        # We don't support and configuration, so intentionally empty
         pass
 
     def get(self, *path):
