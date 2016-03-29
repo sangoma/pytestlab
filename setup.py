@@ -60,7 +60,8 @@ setup_params = dict(
         'six',
         'SQLAlchemy',
         'srvlookup',
-        'subprocess32'
+        'subprocess32',
+        'tftpy'
     ],
     extras_require={
         'build': ['pycparser', 'cffi'],
