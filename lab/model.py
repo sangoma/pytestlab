@@ -2,6 +2,7 @@ import six
 import json
 import collections
 import logging
+from pprint import pformat
 
 
 logger = logging.getLogger(__name__)
@@ -12,14 +13,32 @@ def pretty_json(data):
                                     ensure_ascii=False))
 
 
-class CommonMixin(object):
+class ProvidersMixin(object):
+    def __init__(self, name, providers):
+        self.layers = []
+        self.name = name
+        self._providers = providers
+        indent = self.modelid
+
+        for backend in providers:
+            logger.debug(
+                "reading {} {} from {}".format(
+                    indent, self.name, backend.name)
+            )
+
+            record = backend.get(indent, name)
+            data = json.loads(record.data) if record.data else {}
+            self.layers.append((backend.name, record, data))
+
+        logger.debug("layers are\n{}".format(pformat(self.layers)))
+
     def providers(self):
         for name, layer, data in reversed(self.layers):
             yield name, data
 
     @property
     def view(self):
-        """A copy of this provider's data contents.
+        """A copy of provider's data contents.
         """
         data = {}
         for _, _, record in reversed(self.layers):
@@ -27,17 +46,12 @@ class CommonMixin(object):
         return data
 
 
-class Equipment(collections.MutableMapping, CommonMixin):
-    def __init__(self, hostname, providers):
-        self.layers = []
-        self.hostname = hostname
-        for backend in providers:
-            logger.debug("reading equipment {} from "
-                         "{}".format(hostname, backend.name))
+class Equipment(collections.MutableMapping, ProvidersMixin):
+    modelid = 'equipment'
 
-            provider = backend.get('equipment', hostname)
-            data = json.loads(provider.data) if provider.data else {}
-            self.layers.append((backend.name, provider, data))
+    @property
+    def hostname(self):
+        return self.name
 
     def __getitem__(self, key):
         for _, _, data in self.layers:
@@ -64,18 +78,8 @@ class Equipment(collections.MutableMapping, CommonMixin):
         return len(self.view)
 
 
-class Environment(CommonMixin):
-    def __init__(self, name, providers):
-        self.layers = []
-        self._providers = providers
-
-        for backend in providers:
-            logger.debug("reading environment {} from "
-                         "{}".format(name, backend.name))
-
-            provider = backend.get('environment', name)
-            data = json.loads(provider.data) if provider.data else {}
-            self.layers.append((backend.name, provider, data))
+class Environment(ProvidersMixin):
+    modelid = 'environment'
 
     def register(self, role, eq):
         """Register a role by mapping it to equipment
