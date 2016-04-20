@@ -49,10 +49,6 @@ class ProvidersMixin(object):
 class Equipment(collections.MutableMapping, ProvidersMixin):
     modelid = 'equipment'
 
-    @property
-    def hostname(self):
-        return self.name
-
     def __getitem__(self, key):
         for _, _, data in self.layers:
             try:
