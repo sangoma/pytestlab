@@ -34,7 +34,7 @@ class Client(object):
 
         backends_config = self.config.get('providers')
         if not backends_config:
-            if targets:
+            if targets:  # parse `targets` comma separated str
                 targets_set = set(x.strip() for x in targets.split(','))
                 backends_config = [{target: None} for target in targets_set]
             else:
@@ -95,9 +95,11 @@ def equipment(ctx, name):
 @pass_client
 @click.pass_context
 def equipment_get(ctx, client, verbose):
-    entry = client.equipment(ctx.parent.name)
+    name = ctx.parent.name
+    entry = client.equipment(name)
 
     if not entry:
+        click.echo_via_pager("No equipment '{}' was found".format(name))
         return
     client.print_entry(entry, verbose)
 
@@ -140,10 +142,13 @@ def env(ctx, name):
 @pass_client
 @click.pass_context
 def env_get(ctx, client, verbose):
-    entry = client.environment(ctx.parent.name)
+    name = ctx.parent.name
+    entry = client.environment(name)
 
     if not entry:
+        click.echo_via_pager("No environment '{}' was found".format(name))
         return
+
     client.print_entry(entry, verbose)
 
 
