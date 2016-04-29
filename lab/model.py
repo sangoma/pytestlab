@@ -109,9 +109,11 @@ class Environment(ProvidersMixin):
 
     def get(self, key, default=None):
         try:
-            return self[key]
-        except IndexError:
+            equipment = self[key]
+        except KeyError:
             return default
+        else:
+            return equipment if equipment else default
 
     def __iter__(self):
         return iter(self.view)
