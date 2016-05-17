@@ -40,6 +40,7 @@ setup_params = dict(
         'enum34',
         'ipaddress',
         'jenkinsapi',
+        'jinja2',
         'libarchive',
         'lxml',
         'paramiko',
