@@ -1,3 +1,4 @@
+# pylint: disable=C0330
 from sqlalchemy import Table, Column, ForeignKey, MetaData
 from sqlalchemy import Integer, String, Boolean, DateTime
 
