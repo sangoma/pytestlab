@@ -5,7 +5,6 @@ import logging
 import socket
 import select
 import posixpath
-import srvlookup
 import etcd
 import click
 import json
