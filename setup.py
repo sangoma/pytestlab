@@ -33,7 +33,7 @@ setup_params = dict(
         # the requirements file.
         'beautifulsoup4',
         'bs4',
-        'click',
+        'cliff',
         'colorlog',
         'contextlib2',
         'dnspython',
@@ -68,8 +68,12 @@ setup_params = dict(
     },
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
-    entry_points={'console_scripts': ['labctl=lab.client:cli',
-                                      'labagent=lab.agent:cli']},
+    entry_points={'console_scripts': ['labctl=lab.app.__main__:main'],
+                  'labctl': ['show=lab.app.environments:EnvLister',
+                             'add=lab.app.environments:EnvRegister',
+                             'rm=lab.app.environments:EnvUnregister',
+                             'facts=lab.app.facts:FactsLister',
+                             'import=lab.app.import:Importer']},
     cffi_modules=["sangoma/trace/pcap_build.py:ffi"]
 )
 
