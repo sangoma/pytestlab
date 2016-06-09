@@ -66,7 +66,7 @@ equipment_find_query = sql.select([
     db.equipment.join(
         db.equipment_attributes.join(
             db.attribute_type))
-).where(sql.and_
+).where(sql.and_(
     db.attribute_type.c.name == 'hostname',
     db.equipment_attributes.c.value == sql.bindparam('equipname')
 )).as_scalar()
