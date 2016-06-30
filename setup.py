@@ -36,7 +36,7 @@ setup_params = dict(
         'contextlib2',
         'dnspython',
         'enum34',
-        'ESL',
+        'python-ESL',
         'ipaddress',
         'jenkinsapi',
         'jinja2',
