@@ -70,7 +70,8 @@ setup_params = dict(
         'subprocess32',
         'switchy',
         'tftpy',
-        'vegapy'
+        'vegapy',
+        'bravado',
     ],
     extras_require={
         'build': ['pycparser', 'cffi'],
