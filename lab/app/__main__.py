@@ -4,6 +4,10 @@ from cliff.commandmanager import CommandManager
 from lab.provider import FileProvider, EtcdProvider, PostgresqlProvider
 from lab.model import Environment, Equipment
 from lab.config import load_lab_config
+import logging
+
+
+log = logging.getLogger('labctl')
 
 
 BACKENDS = {backend.name: backend
@@ -17,6 +21,7 @@ def load_backends(config=None):
 
     backends = []
     for node in config:
+        log.debug("Found config entry {}".format(node))
         name, kwargs = node.items()[0]
         backend = BACKENDS[name](kwargs)
         backends.append(backend)
@@ -38,6 +43,7 @@ def get_providers(targets, config):
 class LabctlApp(App):
     def __init__(self):
         self.config = load_lab_config()
+        assert self.config, 'No config file (lab.yaml) could be found?'
         self.providers = None
         super(LabctlApp, self).__init__(
             description='Manage pytest-lab',
