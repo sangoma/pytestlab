@@ -37,39 +37,37 @@ class FactsLister(Lister):
             elif parsed_args.key and parsed_args.value:
                 entry[parsed_args.key] = parsed_args.value
 
-            items = sorted(entry.view.iteritems(), key=operator.itemgetter(0))
+            items = sorted(entry.view.items(), key=operator.itemgetter(0))
+            if not items:
+                self.log.warn("The location {} currently has no facts"
+                              .format(name))
             return ('key', 'value'), items
 
-        equip = self.app.get_equipment(name)
-        if equip:
+        if not parsed_args.env:
+            equip = self.app.get_equipment(name)
             return process(parsed_args, equip)
 
-        elif parsed_args.env:  # an environment was requested
-            env = self.app.get_environment(name)
-            if not env and not equip:
-                self.log.warn(
-                    "No environment with name '{}' exists?"
-                    .format(name)
-                )
-                return ('key', 'value'), []
-
-            # batch process over all equipment in the environment
-            args = copy.copy(parsed_args)
-            for rolename, hosts in sorted(
-                env.view.iteritems(), key=operator.itemgetter(0)
-            ):
-                self.log.info("\n|{}|\n".format(rolename))
-                for hostname in hosts:
-                    self.log.info("{}".format(hostname))
-                    args.host = hostname
-                    self.run(args)
-
-            # calls to self.run() above to all the work
+        # an environment was requested
+        assert parsed_args.env
+        env = self.app.get_environment(name)
+        if not env:
+            self.log.warn(
+                "No environment with name '{}' exists?"
+                .format(name)
+            )
             return ('key', 'value'), []
 
-        # no equip/location was found
-        self.log.warn(
-            "No location with name '{}' exists?"
-            .format(name)
-        )
+        # batch process over all equipment in the environment
+        args = copy.copy(parsed_args)
+        for rolename, hosts in sorted(
+            env.view.iteritems(), key=operator.itemgetter(0)
+        ):
+            self.log.info("\n|{}|\n".format(rolename))
+            for hostname in hosts:
+                self.log.info("{}".format(hostname))
+                args.env = False
+                args.host = hostname
+                self.run(args)
+
+        # calls to self.run() above to all the work
         return ('key', 'value'), []
