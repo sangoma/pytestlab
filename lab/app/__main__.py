@@ -53,7 +53,7 @@ class LabctlApp(App):
         )
 
     def initialize_app(self, argv):
-        self.providers = get_providers('postgresql', self.config)
+        self.providers = get_providers('postgresql, files', self.config)
 
     def get_equipment(self, name):
         return Equipment(name, self.providers)
