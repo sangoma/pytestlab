@@ -30,6 +30,9 @@ class SSHMixin(object):
     """Provides `plumbum` remote SSH and paramiko SFTP connections as
     properties. Expected to be mixed with the base `Controller`.
     """
+    def __init__(self, equipment, **kwargs):
+        super(SSHMixin, self).__init__(equipment, **kwargs)
+
     ssh = connection('_ssh', lambda ctl: get_ssh(ctl.location),
                      lambda ctl, ssh: ssh._session.alive())
 
@@ -41,13 +44,13 @@ class RPyCMixin(SSHMixin):
     """Provides ``rpyc`` connection factory methods as well as a cached master
     connection.
     """
-    def __enter__(self):
-        # the None key entry corresponds to the default system python
+    def __init__(self, equipment, **kwargs):
+        super(RPyCMixin, self).__init__(equipment, **kwargs)
         self._venvs2rpycs = {}
         self._ssh2zdservers = {}
-        return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def close(self):
+        super(SSHMixin, self).close()
         for conn in self._venvs2rpycs.values():
             conn.close()
 
