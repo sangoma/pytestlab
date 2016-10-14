@@ -8,6 +8,7 @@ import re
 import plumbum
 import py
 import itertools
+from .utils import encode_path
 
 
 def sanitized_name(name):
@@ -94,10 +95,14 @@ class StorageManager(object):
             prefix_dir.mkdir()
 
             for remotefile, contents in logset.iteritems():
-                filename = str(remotefile)
-                localfile = prefix_dir.join(
-                    filename.lstrip(remotefile.root).replace('/', '_')
-                )
+                absname = filename = str(remotefile)
+
+                # any plumbum remote path should be encoded as an
+                # appropriate file name
+                if getattr(remotefile, 'dirname'):
+                    absname = encode_path(absname)
+
+                localfile = prefix_dir.join(absname)
                 localfile.write(contents)
                 pytest.log.info('Archived {}'.format(filename))
 
