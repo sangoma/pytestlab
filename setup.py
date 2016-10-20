@@ -76,7 +76,7 @@ setup_params = dict(
     extras_require={
         'build': ['pycparser', 'cffi'],
     },
-    tests_require=['pytest'],
+    tests_require=['pytest', 'docker-py'],
     cmdclass={'test': PyTest},
     entry_points={'console_scripts': ['labctl=lab.app.__main__:main'],
                   'labctl': ['show=lab.app.environments:EnvLister',

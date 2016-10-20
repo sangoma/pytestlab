@@ -1,4 +1,5 @@
-pytest_plugins = "logwatch"
+pytest_plugins = ("logwatch", "pytester")
+import pytest
 
 
 def test_logwatch_source(testdir):
@@ -10,7 +11,8 @@ def test_logwatch_source(testdir):
 
         mocksource = mock.Mock()
         mocksource.capture = mock.Mock(
-            return_value=[('test_logwatch.txt', 'Error: This is a test error.')]
+            return_value=[
+                ('test_logwatch.txt', 'Error: This is a test error.')]
         )
 
         @pytest.hookimpl
@@ -41,4 +43,58 @@ def test_logwatch_source(testdir):
     """)
 
     result = testdir.runpytest()
+    assert result.ret == 0
+
+
+def test_reliable_ssh(testdir, alpine_ssh):
+    """Verify that even if all ``logfiles`` ssh connections are closed new
+    ones we can still reliably capture logs by creating new connections.
+    """
+    addr, port = alpine_ssh
+    src = """
+        import pytest
+        from sangoma.controllers import base
+        from sangoma.ssh import get_ssh
+        from logwatch import logfiles
+
+        pytest_plugins = ('logwatch', 'sangoma.lab.roles')
+
+        class Ctl(base.Controller):
+            logwatched = False
+
+            def pytest_lab_log_watch(self, logmanager):
+                # register for a fake log that shouldn't exist
+                logmanager.register(logfiles(self, ('/tmp/', ['fakelog.log'])))
+                self.logwatched = True
+
+            @property
+            def ssh(self):
+                return get_ssh(self.location)
+
+
+        def pytest_lab_addroles(rolemanager):
+            rolemanager.register('ctl', Ctl)
+            assert not Ctl.logwatched
+
+        @pytest.fixture
+        def localhost():
+            return pytest.env.manage('localhost', facts={
+                'port': 2222, 'password': 'root'})
+
+    """
+    testdir.makeconftest(src)
+    testdir.makepyfile("""
+        import pytest
+
+        def test_ssh_reliability(localhost):
+            ctl = localhost.role('ctl')
+            assert ctl.logwatched
+            lm = pytest.logmanager
+            for sourcetypes in lm.sources.values():
+                for source in sourcetypes:
+                    # purposely close ssh connection
+                    source.ssh.close()
+    """)
+
+    result = testdir.runpytest_inprocess('--env', 'mock')
     assert result.ret == 0
