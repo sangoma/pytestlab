@@ -78,12 +78,15 @@ setup_params = dict(
     },
     tests_require=['pytest', 'docker-py'],
     cmdclass={'test': PyTest},
-    entry_points={'console_scripts': ['labctl=lab.app.__main__:main'],
-                  'labctl': ['show=lab.app.environments:EnvLister',
-                             'add=lab.app.environments:EnvRegister',
-                             'rm=lab.app.environments:EnvUnregister',
-                             'facts=lab.app.facts:FactsLister',
-                             'import=lab.app.import:Importer']},
+    entry_points={
+        'console_scripts': ['labctl=lab.app.__main__:main'],
+        'labctl': [
+            'show=lab.app.environments:EnvLister',
+            'add=lab.app.environments:EnvRegister',
+            'rm=lab.app.environments:EnvUnregister',
+            'facts=lab.app.facts:FactsLister',
+        ]
+    },
     cffi_modules=["sangoma/trace/pcap_build.py:ffi"]
 )
 

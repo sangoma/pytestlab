@@ -255,11 +255,11 @@ def pytest_addhooks(pluginmanager):
 def pytest_addoption(parser):
     group = parser.getgroup('environment')
     group.addoption('--env', action='store', required=True,
-                    help='pycopia db environment name')
+                    help='Test environment name')
     group.addoption('--user', action='store',
-                    help='pycopia user to lock the environment again')
+                    help='Explicit user to lock the test environment with')
     group.addoption('--wait-on-lock', action='store_true',
-                    help='tell pytest to wait for dut to unlock')
+                    help='Tell pytest to wait for dut to unlock')
 
 
 def pytest_configure(config):
