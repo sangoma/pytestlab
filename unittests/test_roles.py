@@ -8,7 +8,7 @@ def mockctl(testdir):
         import mock
         from sangoma.controllers import base
 
-        pytest_plugins = 'sangoma.lab.roles'
+        pytest_plugins = 'lab'
 
         class MyCtl(base.Controller):
             def __init__(self, location, **kwargs):
@@ -34,7 +34,7 @@ def mockctl(testdir):
 
 def test_manage_location(testdir):
     testdir.makeconftest("""
-        pytest_plugins = 'sangoma.lab.roles'
+        pytest_plugins = 'lab'
     """)
 
     testdir.makepyfile("""

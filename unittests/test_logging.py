@@ -57,7 +57,7 @@ def test_reliable_ssh(testdir, alpine_ssh):
         from sangoma.ssh import get_ssh
         from logwatch import logfiles
 
-        pytest_plugins = ('logwatch', 'sangoma.lab.roles')
+        pytest_plugins = ('logwatch', 'lab')
 
         class Ctl(base.Controller):
             logwatched = False
