@@ -1,4 +1,4 @@
-pytest_plugins = ("logwatch", "pytester")
+pytest_plugins = ("lab.logwatch", "pytester")
 import pytest
 
 
@@ -7,7 +7,7 @@ def test_logwatch_source(testdir):
         import mock
         import pytest
 
-        pytest_plugins = 'logwatch'
+        pytest_plugins = 'lab.logwatch'
 
         mocksource = mock.Mock()
         mocksource.capture = mock.Mock(
@@ -55,9 +55,9 @@ def test_reliable_ssh(testdir, alpine_ssh):
         import pytest
         from sangoma.controllers import base
         from sangoma.ssh import get_ssh
-        from logwatch import logfiles
+        from lab.logwatch import logfiles
 
-        pytest_plugins = ('logwatch', 'lab')
+        pytest_plugins = ('lab.logwatch', 'lab')
 
         class Ctl(base.Controller):
             logwatched = False
