@@ -57,11 +57,11 @@ def test_role_loading(mockctl, testdir):
     testdir.makeconftest("""
         pytest_plugins = 'mockctl'
 
-        def pytest_lab_register_role(config, ctl):
+        def pytest_lab_role_created(config, ctl):
             if ctl.name == 'mock':
                 ctl.setup()
 
-        def pytest_lab_delete_role(config, ctl):
+        def pytest_lab_role_destroyed(config, ctl):
             if ctl.name == 'mock':
                 ctl.teardown()
     """)
