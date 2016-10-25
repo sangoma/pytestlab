@@ -6,4 +6,5 @@ pytest_plugins = (
     'lab.storage',
     'lab.roles',
     'lab.logwatch',
+    'lab.log',
 )

@@ -9,7 +9,7 @@ import contextlib2
 import socket
 from collections import MutableMapping
 import lab
-from sangoma.descriptors import cached_property
+from .utils import cached_property
 from _pytest.runner import TerminalRepr
 from .lock import EnvironmentLock
 
