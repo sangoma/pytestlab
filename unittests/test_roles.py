@@ -11,8 +11,8 @@ def mockctl(testdir):
         pytest_plugins = 'lab'
 
         class MyCtl(base.Controller):
-            def __init__(self, location, **kwargs):
-                super(type(self), self).__init__(location, **kwargs)
+            def __init__(self, config, location, **kwargs):
+                super(type(self), self).__init__(config, location, **kwargs)
                 self.setup = mock.MagicMock()
                 self.teardown = mock.MagicMock()
 
@@ -23,7 +23,7 @@ def mockctl(testdir):
         def mock_factory():
             return global_mock
 
-        def pytest_lab_addroles(rolemanager):
+        def pytest_lab_addroles(config, rolemanager):
             rolemanager.register('mock', global_mock)
 
         @pytest.fixture
@@ -67,11 +67,12 @@ def test_role_loading(mockctl, testdir):
     """)
 
     testdir.makepyfile("""
-        def test_add_role(localhost, mock_factory):
+        def test_add_role(request, localhost, mock_factory):
             role = localhost.role('mock', doggy='doggy')
 
             # test location arg and kwargs pass through on build
-            mock_factory.assert_called_once_with(localhost, doggy='doggy')
+            mock_factory.assert_called_once_with(request.config, localhost,
+                                                 doggy='doggy')
 
             assert role.name == 'mock'
             assert role.location == localhost

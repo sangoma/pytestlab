@@ -14,7 +14,8 @@ class Controller(object):
     '''Base for all Controllers.
     This is a bare bones definition which can be modified as needed.
     '''
-    def __init__(self, location, **kwargs):
+    def __init__(self, config, location, **kwargs):
+        self.config = config
         self._location = weakref.ref(location)
         self.name = self.__class__.__name__
         self.log = location.log

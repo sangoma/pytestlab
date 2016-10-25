@@ -50,14 +50,13 @@ class RolesLookupErrorRepr(TerminalRepr):
 
 class RoleManager(object):
     def __init__(self):
-        self.config = None  # set in pytest_configure
         self.roles2factories = {}
 
     def register(self, name, factory):
         self.roles2factories[name] = factory
 
     def build(self, rolename, location, **kwargs):
-        ctl = self.roles2factories[rolename](location, **kwargs)
+        ctl = self.roles2factories[rolename](pytest.config, location, **kwargs)
         ctl.name = rolename
         return ctl
 
@@ -82,7 +81,7 @@ class Location(object):
         `name` in the `pytest_lab_addroles` hook from this location.
         The role is cached based on the name and additional arguments.
         """
-        config = pytest.rolemanager.config
+        config = pytest.config
         key = name, tuple(kwargs.items())
         try:
             return self.roles[key]
@@ -107,7 +106,7 @@ class Location(object):
         return role
 
     def _close_role(self, role):
-        config = pytest.rolemanager.config
+        config = pytest.config
         config.hook.pytest_lab_role_destroyed(config=config, ctl=role)
         try:
             role.close()
@@ -187,7 +186,7 @@ class EnvManager(object):
                                                config.option.wait_on_lock)
 
         config.hook.pytest_lab_addroles.call_historic(
-            kwargs=dict(rolemanager=pytest.rolemanager)
+            kwargs=dict(config=self.config, rolemanager=pytest.rolemanager)
         )
 
         # local cache
@@ -264,7 +263,6 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     pytest.env = EnvManager(config)
-    pytest.rolemanager.config = config
     config.pluginmanager.register(pytest.env, 'environment')
     config.add_cleanup(pytest.env.cleanup)
 

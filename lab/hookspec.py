@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.hookspec(historic=True)
-def pytest_lab_addroles(rolemanager):
+def pytest_lab_addroles(config, rolemanager):
     """new role registered"""
 
 

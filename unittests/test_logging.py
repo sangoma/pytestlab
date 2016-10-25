@@ -72,7 +72,7 @@ def test_reliable_ssh(testdir, alpine_ssh):
                 return get_ssh(self.location)
 
 
-        def pytest_lab_addroles(rolemanager):
+        def pytest_lab_addroles(config, rolemanager):
             rolemanager.register('ctl', Ctl)
             assert not Ctl.logwatched
 
