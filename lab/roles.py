@@ -195,7 +195,7 @@ class EnvManager(object):
 
     def manage(self, hostname, facts=None):
         """Manage a new software hosting location by `hostname`.
-        `facts` is an optional dictionary of location/equipment data.
+        `facts` is an optional dictionary of data.
         """
         try:
             location = self.locations[hostname]
