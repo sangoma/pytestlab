@@ -1,5 +1,7 @@
-pytest_plugins = ("lab.logwatch", "pytester")
 import pytest
+
+
+pytest_plugins = ("lab.logwatch", "pytester")
 
 
 def test_logwatch_source(testdir):

@@ -202,7 +202,7 @@ class EnvManager(object):
             location = Location(hostname, facts)
             self.locations[hostname] = location
         else:
-            if dict(location.facts) != facts:
+            if facts and dict(location.facts) != facts:
                 location.facts.update(facts)
 
         return location
