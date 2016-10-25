@@ -6,7 +6,7 @@ def mockctl(testdir):
     testdir.makepyfile(mockctl="""
         import pytest
         import mock
-        from sangoma.controllers import base
+        from lab.ctl import base
 
         pytest_plugins = 'lab'
 

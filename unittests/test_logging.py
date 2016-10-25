@@ -53,7 +53,7 @@ def test_reliable_ssh(testdir, alpine_ssh):
     addr, port = alpine_ssh
     src = """
         import pytest
-        from sangoma.controllers import base
+        from lab.ctl import base
         from sangoma.ssh import get_ssh
         from lab.logwatch import logfiles
 
