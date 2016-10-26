@@ -1,7 +1,7 @@
 """
 Built-in software role controllers.
 """
-from sangoma.ssh import get_ssh, get_sftp
+from lab.ssh import get_ssh, get_sftp
 from rpyc.utils.zerodeploy import DeployedServer
 
 

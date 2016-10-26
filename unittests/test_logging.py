@@ -56,7 +56,7 @@ def test_reliable_ssh(testdir, alpine_ssh):
     src = """
         import pytest
         from lab.ctl import base
-        from sangoma.ssh import get_ssh
+        from lab.ssh import get_ssh
         from lab.logwatch import logfiles
 
         pytest_plugins = ('lab.logwatch', 'lab')
