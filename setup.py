@@ -87,7 +87,7 @@ setup_params = dict(
             'facts=lab.app.facts:FactsLister',
         ]
     },
-    cffi_modules=["sangoma/trace/pcap_build.py:ffi"]
+    cffi_modules=["trace/pcap_build.py:ffi"]
 )
 
 if __name__ == '__main__':
