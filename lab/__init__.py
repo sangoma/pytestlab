@@ -7,4 +7,5 @@ pytest_plugins = (
     'lab.roles',
     'lab.logwatch',
     'lab.log',
+    'lab.warnreporter',
 )
