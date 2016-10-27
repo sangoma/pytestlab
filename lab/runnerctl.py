@@ -2,6 +2,7 @@
 pytest runner control plugin
 """
 import pytest
+import string
 
 
 def pytest_runtest_makereport(item, call):
@@ -27,3 +28,14 @@ def pytest_runtest_protocol(item, nextitem):
     yield
     if pytest.halt.msg:
         item.session.shouldstop = pytest.halt.msg
+
+
+@pytest.fixture(scope='class')
+def testname(request):
+    """Pytest test node name with all unfriendly characters transformed
+    into underscores. The lifetime is class scoped since this name is
+    often used to provision remote sw profiles which live for the entirety
+    of a test suite.
+    """
+    return request.node.name.translate(
+        string.maketrans('\[', '__')).strip(']')
