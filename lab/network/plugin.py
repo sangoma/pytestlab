@@ -91,6 +91,7 @@ def pytest_runtest_setup(item):
         if addr_family == socket.AF_INET:
             pytest.skip("Test not enabled for IPv4")
 
+
 @pytest.fixture(scope='session')
 def best_route(dut_host, ip_ver):
     return network.find_best_route(dut_host, version=ip_ver)
@@ -156,7 +157,7 @@ def vlan_set(primary_iface):
     with contextlib2.ExitStack() as stack:
         def inner(count):
             return [stack.enter_context(network.MacVLan(primary_iface))
-                    for _ in xrange(count)]
+                    for _ in range(count)]
 
         yield inner
 
