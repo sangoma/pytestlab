@@ -98,5 +98,5 @@ def test_reliable_ssh(testdir, alpine_ssh):
                     source.ssh.close()
     """)
 
-    result = testdir.runpytest_inprocess('--env', 'mock')
+    result = testdir.runpytest_inprocess()
     assert result.ret == 0

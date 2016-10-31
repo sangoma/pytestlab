@@ -1,11 +1,6 @@
 # vim:ts=4:sw=4:softtabstop=4:smarttab:expandtab
-#
-# Copyright (C) 2015 Sangoma Technologies Corp.
-# All Rights Reserved.
-
 import pytest
 import logging
-import contextlib2
 import socket
 from collections import MutableMapping
 import lab
@@ -161,11 +156,12 @@ class Location(object):
 
 
 class EnvManager(object):
-    def __init__(self, config):
+    def __init__(self, name, config):
         self.config = config
-        self.name = config.option.env
+        self.name = name
 
-        if self.name == 'mock':
+        if self.name == 'anonymous':
+            # allows a user to set up an environment from test code alone
             providers = []
         else:
             providers = lab.load_backends(None)
@@ -174,7 +170,7 @@ class EnvManager(object):
         self.lock = None
 
         # TODO: need something more robust
-        if self.name != 'mock':
+        if self.name != 'anonymous':
             if not self.env.view:
                 raise EnvironmentLookupError()
 
@@ -212,8 +208,10 @@ class EnvManager(object):
         """
         equipment = self.env.get(rolename)
         if not equipment:
-            raise EquipmentLookupError("Equipment {} not found"
-                                       .format(rolename))
+            raise EquipmentLookupError(
+                "'{}' not found in environment '{}'"
+                "\nDid you pass the wrong environment name with --env=NAME ?"
+                .format(rolename, self.name))
 
         # NOTE: for equipment models their `name` should be a hostname
         return [self.manage(eq.name, facts=eq) for eq in equipment]
@@ -253,7 +251,7 @@ def pytest_addhooks(pluginmanager):
 
 def pytest_addoption(parser):
     group = parser.getgroup('environment')
-    group.addoption('--env', action='store', required=True,
+    group.addoption('--env', action='store', default='anonymous',
                     help='Test environment name')
     group.addoption('--user', action='store',
                     help='Explicit user to lock the test environment with')
@@ -262,7 +260,7 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    pytest.env = EnvManager(config)
+    pytest.env = EnvManager(config.option.env, config)
     config.pluginmanager.register(pytest.env, 'environment')
     config.add_cleanup(pytest.env.cleanup)
 
