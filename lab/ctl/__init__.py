@@ -1,29 +1,8 @@
 """
 Built-in software role controllers.
 """
-from lab.ssh import get_ssh, get_sftp
+from ..comms import connection
 from rpyc.utils.zerodeploy import DeployedServer
-
-
-class connection(object):
-    """A reliable descriptor for connection types.
-    """
-    def __init__(self, attrname, factory, conncheck):
-        self.attr = attrname
-        self.factory = factory
-        # must return True if connected
-        self.checker = conncheck
-
-    def __get__(self, ctl, type=None):
-        if ctl is None:
-            return self
-
-        conn = getattr(ctl, self.attr, None)
-        if conn is None or not self.checker(ctl, conn):
-            conn = self.factory(ctl)
-            setattr(ctl, self.attr, conn)
-
-        return conn
 
 
 class SSHMixin(object):
@@ -33,11 +12,8 @@ class SSHMixin(object):
     def __init__(self, config, location, **kwargs):
         super(SSHMixin, self).__init__(config, location, **kwargs)
 
-    ssh = connection('_ssh', lambda ctl: get_ssh(ctl.location),
-                     lambda ctl, ssh: ssh._session.alive())
-
-    sftp = connection('_sftp', lambda ctl: get_sftp(ctl.location),
-                      lambda ctl, sftp: sftp.get_channel().active)
+    ssh = connection('ssh')
+    sftp = connection('sftp')
 
 
 class RPyCMixin(SSHMixin):
