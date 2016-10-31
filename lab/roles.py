@@ -179,7 +179,7 @@ class EnvManager(object):
                 raise EnvironmentLookupError()
 
         # XXX a hack to get a completely isolated setup for now
-        if providers and providers[0] == 'files':
+        if len(providers) > 1:
             self.lock = EnvironmentLock.aquire(config.option.user,
                                                config.option.env,
                                                config.option.discovery_srv,
