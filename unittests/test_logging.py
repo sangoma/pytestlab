@@ -48,11 +48,10 @@ def test_logwatch_source(testdir):
     assert result.ret == 0
 
 
-def test_reliable_ssh(testdir, alpine_ssh):
+def test_reliable_logwatch(testdir, alpine_ssh):
     """Verify that even if all ``logfiles`` ssh connections are closed new
     ones we can still reliably capture logs by creating new connections.
     """
-    addr, port = alpine_ssh
     src = """
         import pytest
         from lab.ctl import base
@@ -98,5 +97,6 @@ def test_reliable_ssh(testdir, alpine_ssh):
                     source.ssh.close()
     """)
 
-    result = testdir.runpytest_inprocess()
+    with alpine_ssh():
+        result = testdir.runpytest_inprocess()
     assert result.ret == 0
