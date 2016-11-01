@@ -58,6 +58,10 @@ class Reliable(object):
     def __getattr__(self, attr):
         return getattr(self.driver, attr)
 
+    def __dir__(self):
+        return sorted(set(dir(type(self.driver)) + list(
+            self.driver.__dict__.keys())))
+
 
 def reliable_proxy(location, key):
     """Create reliable proxy instance for a communications driver according to
