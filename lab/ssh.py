@@ -7,6 +7,7 @@ import types
 import logging
 from stat import S_ISDIR
 from plumbum import ProcessExecutionError
+from plumbum.machines.session import SSHCommsError
 
 
 log = logging.getLogger(__name__)
