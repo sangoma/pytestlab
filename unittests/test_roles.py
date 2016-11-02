@@ -49,7 +49,7 @@ def test_manage_location(testdir):
     """)
 
     # Needs a subprocess because of plumbums's atexit hooks
-    result = testdir.runpytest_subprocess()
+    result = testdir.runpytest_inprocess()
     assert result.ret == 0
 
 
@@ -82,7 +82,7 @@ def test_role_loading(mockctl, testdir):
             role.teardown.assert_called_once_with()
     """)
 
-    result = testdir.runpytest_subprocess()
+    result = testdir.runpytest_inprocess()
     assert result.ret == 0
 
 
@@ -99,7 +99,7 @@ def test_load_unknown_role(mockctl, testdir):
                 localhost.role('tyler')
     """)
 
-    result = testdir.runpytest_subprocess()
+    result = testdir.runpytest_inprocess()
     assert result.ret == 0
 
 
@@ -118,7 +118,7 @@ def test_request_role_twice(mockctl, testdir):
             assert mock1 == mock2
     """)
 
-    result = testdir.runpytest_subprocess()
+    result = testdir.runpytest_inprocess()
     assert result.ret == 0
 
 
@@ -144,5 +144,5 @@ def test_register_after_deletion(mockctl, testdir):
             assert mock1 is not mock2
     """)
 
-    result = testdir.runpytest_subprocess()
+    result = testdir.runpytest_inprocess()
     assert result.ret == 0
