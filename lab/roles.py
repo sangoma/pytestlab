@@ -115,8 +115,11 @@ class Location(object):
             self._close_role(role)
 
     def cleanup(self):
-        for role in self.roles.itervalues():
-            self._close_role(role)
+        for role in self.roles.copy().values():
+            self.destroy(role)
+        # sanity
+        assert not len(self.roles), "Some roles weren't destroyed {}?".format(
+            self.roles)
 
     @cached_property
     def addrinfo(self):
