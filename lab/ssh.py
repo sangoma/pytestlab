@@ -6,8 +6,9 @@ import os
 import types
 import logging
 from stat import S_ISDIR
-from plumbum import ProcessExecutionError
-from plumbum.machines.session import SSHCommsError
+from paramiko import SSHException
+from paramiko.agent import Agent as SSHAgent
+from paramiko.ssh_exception import AuthenticationException
 
 
 log = logging.getLogger(__name__)
@@ -84,17 +85,37 @@ def get_generic_sftp(location, **kwargs):
         sftp.walk = types.MethodType(walk, sftp)
         return sftp
 
-    if keyfile:
-        try:
+    def iter_credentials():
+        if keyfile:
+            log.info("Offering keyfile {}...".format(keyfile))
             pkey = paramiko.RSAKey.from_private_key_file(keyfile)
-            transport = get_transport(username=username, pkey=pkey)
-            return get_sftp(transport)
-        except paramiko.ssh_exception.AuthenticationException:
-            log.warn("Failed to auth ssh with keyfile {}".format(keyfile))
+            yield {'username': username, 'pkey': pkey}
 
-    log_message = "Trying SSH connection to {} with credentials {}:{}"
-    log.info(log_message.format(hostname, username, password))
-    transport = get_transport(username=username, password=password)
+        if password:
+            log.info("Offering password...")
+            yield {'username': username, 'password': password}
+
+        if 'SSH_AUTH_SOCK' in os.environ:
+            agent = SSHAgent()
+            for pkey in agent.get_keys():
+                log.info("Offering {} key from agent...".format(pkey.name))
+                yield {'username': username, 'pkey': pkey}
+
+    err = None
+    transport = None
+
+    log.info("Trying SSH connection to {}...".format(hostname))
+    for credentials in iter_credentials():
+        err = None
+        try:
+            transport = get_transport(**credentials)
+            break
+        except AuthenticationException as _:
+            err = _
+            log.warning("Authentication failed: {}".format(err))
+
+    if err or not transport:
+        raise EnvironmentError('Failed to establish ssh transport')
     return get_sftp(transport)
 
 
