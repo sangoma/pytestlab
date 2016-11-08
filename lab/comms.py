@@ -67,7 +67,9 @@ def reliable_proxy(location, key):
     """Create reliable proxy instance for a communications driver according to
     the registry.
     """
-    data = _registry[key]
+    # Since we pop 'magic_methods' below but also need that list for every new
+    # proxy instance, we copy the original registered map.
+    data = _registry[key].copy()
     return type(
         'ReliableProxy',
         (Reliable,),
@@ -86,13 +88,18 @@ class connection(object):
             raise KeyError(
                 "No comms driver for {} has been registered".format(key))
         self.key = key
-        self._proxy = None
+        self._proxies = {}
 
     def __get__(self, ctl, type=None):
         if ctl is None:
             return self
 
-        if self._proxy is None:
-            self._proxy = reliable_proxy(ctl.location, self.key)
+        # cache connections per location
+        proxy = self._proxies.get(ctl.location, None)
+        if proxy is None:
+            logging.debug("Creating new {} connection for {}"
+                          .format(self.key, ctl.location))
+            proxy = reliable_proxy(ctl.location, self.key)
+            self._proxies[ctl.location] = proxy
 
-        return self._proxy
+        return proxy
