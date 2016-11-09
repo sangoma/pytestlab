@@ -99,7 +99,7 @@ class StorageManager(object):
 
                 # any plumbum remote path should be encoded as an
                 # appropriate file name
-                if getattr(remotefile, 'dirname'):
+                if getattr(remotefile, 'dirname', None):
                     absname = encode_path(absname)
 
                 localfile = prefix_dir.join(absname)
