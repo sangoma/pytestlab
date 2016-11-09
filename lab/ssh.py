@@ -7,6 +7,7 @@ import types
 import logging
 import plumbum
 from stat import S_ISDIR
+from plumbum import ProcessExecutionError
 from paramiko import SSHException
 from paramiko.agent import Agent as SSHAgent
 from paramiko.ssh_exception import AuthenticationException
