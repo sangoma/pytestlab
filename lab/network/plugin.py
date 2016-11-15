@@ -150,7 +150,7 @@ def vlan(primary_iface):
         yield vlan
 
 
-@pytest.yield_fixture
+@pytest.yield_fixture(scope='session')
 def vlan_set(primary_iface):
     "constructor to create a variable set of macvlan interfaces"
 
