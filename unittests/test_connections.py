@@ -4,7 +4,6 @@ from lab import comms
 from lab.ssh import SSHCommsError, ProcessExecutionError
 
 
-pytestmark = pytest.mark.skip('Tests are broken due to API changes')
 pytest_plugins = ('lab')
 
 
@@ -64,10 +63,10 @@ def test_custom_proxied_connection(custom_conn, localhost):
     assert conn.key in comms._registry
 
     # verify factory calling and lazy loading
-    assert conn._proxy is None
+    assert not conn._proxies
     myctl = localhost.role('myctl')  # pytest getattrs the world...
     factory.assert_called_once_with(localhost, **kwargs)
-    assert conn._proxy.driver is inst
+    assert conn._proxies[localhost].driver is inst
 
     # verify attr proxying
     myctl.mock.test()

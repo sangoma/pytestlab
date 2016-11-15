@@ -5,6 +5,7 @@ Paramiko machine ctl
 import os
 import types
 import logging
+import plumbum
 from stat import S_ISDIR
 from paramiko import SSHException
 from paramiko.agent import Agent as SSHAgent
@@ -12,6 +13,10 @@ from paramiko.ssh_exception import AuthenticationException
 
 
 log = logging.getLogger(__name__)
+
+# Rexport plumbum errors
+SSHCommsError = plumbum.machines.session.SSHCommsError
+ProcessExecutionError = plumbum.ProcessExecutionError
 
 SSH_OPTS = ['-o', 'UserKnownHostsFile=/dev/null',
             '-o', 'StrictHostKeyChecking=no',
