@@ -143,14 +143,14 @@ def srv(request):
     return lookup
 
 
-@pytest.yield_fixture(scope='class')
+@pytest.fixture(scope='class')
 def vlan(primary_iface):
     '''Create a macvlan device'''
     with network.MacVLan(primary_iface) as vlan:
         yield vlan
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture
 def vlan_set(primary_iface):
     "constructor to create a variable set of macvlan interfaces"
 
