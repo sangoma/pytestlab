@@ -61,7 +61,6 @@ class MacVLan(object):
     """
     def __init__(self, interface, name='macvlan', dhcp=True):
         self.name = _generate_device_name(name)
-        self.dhcp = dhcp
 
         self.ipdb = pyroute2.IPDB()
         vlan = self.ipdb.create(kind='macvlan',
@@ -71,11 +70,8 @@ class MacVLan(object):
         vlan.up()
         vlan.commit()
 
-        if self.dhcp:
-            client = DHCP(self.name)
-            reply = client.request()
-            vlan.add_ip(reply['yiaddr'], mask=reply['options']['subnet_mask'])
-            vlan.commit()
+        # Start dhcp process if necessary
+        self.dhcp = DHCP(self) if dhcp else None
 
     @property
     def addresses(self):
@@ -119,6 +115,9 @@ class MacVLan(object):
         Generally, using the context manager is preferable to having to
         call this manually.
         """
+        if self.dhcp:
+            self.dhcp.close()
+
         if self.exists:
             self.ipdb.interfaces[self.name].remove().commit()
 
