@@ -159,26 +159,15 @@ class Location(object):
 
 
 class EnvManager(object):
-    def __init__(self, name, config):
+    def __init__(self, name, config, providers):
         self.config = config
         self.name = name
-
-        if self.name == 'anonymous':
-            # allows a user to set up an environment from test code alone
-            providers = []
-        else:
-            providers = lab.load_backends(None)
-
-        self.env = lab.Environment(self.name, providers)
-        self.lock = None
-
-        # TODO: need something more robust
-        if self.name != 'anonymous':
-            if not self.env.view:
-                raise EnvironmentLookupError()
+        self._providers = list(providers)
+        self.env = lab.Environment(self.name, self._providers)
 
         # XXX a hack to get a completely isolated setup for now
-        if len(providers) > 1:
+        self.lock = None
+        if len(self._providers) > 1:
             self.lock = EnvironmentLock.aquire(config.option.user,
                                                config.option.env,
                                                config.option.discovery_srv,
@@ -263,9 +252,24 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    pytest.env = EnvManager(config.option.env, config)
-    config.pluginmanager.register(pytest.env, 'environment')
-    config.add_cleanup(pytest.env.cleanup)
+    """Set up the test environment.
+    """
+    providers = []
+    envname = config.option.env
+    if envname != 'anonymous':
+        # load lab.yaml
+        labyaml = lab.config.load_lab_config()
+        providers = lab.load_backends(labyaml.get('providers'))
+
+    envmng = EnvManager(envname, config, providers)
+
+    # ensure the env defines at least some data
+    if envname != 'anonymous' and not envmng.env.view:
+        raise EnvironmentLookupError(envname)
+
+    config.pluginmanager.register(envmng, 'environment')
+    config.add_cleanup(envmng.cleanup)
+    pytest.env = envmng
 
 
 @pytest.fixture(scope='session')
