@@ -1,17 +1,16 @@
 from __future__ import absolute_import
 import json
-from lab.model import pretty_json
 
 
 class Record(object):
     def __init__(self, mockdata, *path):
-        self.data = pretty_json(mockdata)
+        self.data = mockdata
 
     def push(self, data):
         self.data = data
 
     def asdict(self):
-        return json.loads(self.data)
+        return self.data
 
 
 class MockProvider(object):
@@ -28,4 +27,4 @@ class MockProvider(object):
         return Record(self.mockdata, *path)
 
     def asdict(self):
-        return json.loads(self.data)
+        return self.mockdata

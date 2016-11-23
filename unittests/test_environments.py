@@ -19,13 +19,13 @@ def mock_environment():
 
 @pytest.fixture
 def mock_provider(mock_environment):
-    return mock_environment.layers[-1][1]
+    return mock_environment.get_one()[0]
 
 
 def test_presence(mock_environment):
-    assert mock_environment.view['dut'] == ['dut.example.com']
-    assert mock_environment.view['example'] == ['example1.example.com',
-                                                'example2.example.com']
+    assert mock_environment.view['dut']['mock'] == ['dut.example.com']
+    assert mock_environment.view['example']['mock'] == [
+        'example1.example.com', 'example2.example.com']
 
 
 def test_register(mock_environment, mock_provider):
