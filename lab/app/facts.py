@@ -37,14 +37,15 @@ class FactsLister(Lister):
             elif parsed_args.key and parsed_args.value:
                 entry[parsed_args.key] = parsed_args.value
 
-            items = sorted(entry.view.items(), key=operator.itemgetter(0))
-            if not items:
-                self.log.warn("The location {} currently has no facts"
-                              .format(name))
+            items = sorted(entry.items(), key=operator.itemgetter(0))
             return ('key', 'value'), items
 
         if not parsed_args.env:
             equip = self.app.get_equipment(name)
+            if not equip.view:
+                self.log.warn(
+                    "Location '{}' is not defined by any env provider"
+                    .format(name))
             return process(parsed_args, equip)
 
         # an environment was requested
@@ -59,15 +60,14 @@ class FactsLister(Lister):
 
         # batch process over all equipment in the environment
         args = copy.copy(parsed_args)
-        for rolename, hosts in sorted(
-            env.view.iteritems(), key=operator.itemgetter(0)
-        ):
-            self.log.info("\n|{}|\n".format(rolename))
-            for hostname in hosts:
-                self.log.info("{}".format(hostname))
-                args.env = False
-                args.host = hostname
-                self.run(args)
+        for rolename, locs_per_provider in env.view.items():
+            for providername, locations in locs_per_provider.items():
+                self.log.info("\n|{} @ {}|\n".format(rolename, providername))
+                for location in locations:
+                    self.log.info("{}".format(location))
+                    args.env = False
+                    args.host = location
+                    self.run(args)
 
-        # calls to self.run() above to all the work
+        # calls to self.run() above do all the work
         return ('key', 'value'), []

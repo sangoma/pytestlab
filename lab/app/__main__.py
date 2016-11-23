@@ -2,14 +2,11 @@ import sys
 from cliff.app import App
 from cliff.commandmanager import CommandManager
 from lab.provider import get_providers
-from lab.model import Environment, Equipment
-from lab.config import load_lab_config
+from lab.model import Environment, Facts
 
 
 class LabctlApp(App):
     def __init__(self):
-        self.config = load_lab_config()
-        assert self.config, 'No config file (lab.yaml) could be found?'
         self.providers = None
         super(LabctlApp, self).__init__(
             description='Manage pytest-lab',
@@ -19,10 +16,10 @@ class LabctlApp(App):
         )
 
     def initialize_app(self, argv):
-        self.providers = get_providers('postgresql, files', self.config)
+        self.providers = get_providers(['postgresql', 'files'])
 
     def get_equipment(self, name):
-        return Equipment(name, self.providers)
+        return Facts(name, self.providers)
 
     def get_environment(self, name):
         return Environment(name, self.providers)

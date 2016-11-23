@@ -1,17 +1,27 @@
-import operator
-from cliff.command import Command
+import logging
 from cliff.lister import Lister
 
 
-def get_items(cmd, parsed_args, entry=None):
-    entry = entry or cmd.app.get_environment(parsed_args.name)
-    items = sorted(entry.view.iteritems(), key=operator.itemgetter(0))
-    return (('role', 'hosts'),
-            ((role, ','.join(hosts)) for role, hosts in items))
+def get_items(cmd, parsed_args, entry):
+    entry = entry
+    header = ('role',) + tuple(
+        "hosts @ {}".format(provider.name)
+        for provider in entry.providers
+    )
+    rows = []
+    for rolename, locs_per_provider in entry.view.items():
+        row = [rolename]
+        for provider in entry.providers:
+            row.append(', '.join(locs_per_provider.get(
+                provider.name, ('',))))
+        rows.append(row)
+
+    return (header, rows)
 
 
 class EnvLister(Lister):
     "Show an environment"
+    log = logging.getLogger(__name__)
 
     def get_parser(self, prog_name):
         parser = super(EnvLister, self).get_parser(prog_name)
@@ -19,7 +29,11 @@ class EnvLister(Lister):
         return parser
 
     def take_action(self, parsed_args):
-        return get_items(self, parsed_args)
+        entry = self.app.get_environment(parsed_args.name)
+        if not entry.view:
+            self.log.warn("The environment '{}' is not defined by any provider"
+                          .format(entry.name))
+        return get_items(self, parsed_args, entry)
 
 
 class EnvRegister(Lister):
