@@ -258,8 +258,8 @@ def pytest_configure(config):
     envname = config.option.env
     if envname != 'anonymous':
         # load lab.yaml
-        labyaml = lab.config.load_lab_config()
-        providers = lab.load_backends(labyaml.get('providers'))
+        labyaml = lab.provider.load_yaml_config()
+        providers = lab.get_providers()
 
     envmng = EnvManager(envname, config, providers)
 
@@ -269,6 +269,8 @@ def pytest_configure(config):
 
     config.pluginmanager.register(envmng, 'environment')
     config.add_cleanup(envmng.cleanup)
+
+    # make globally accessible
     pytest.env = envmng
 
 

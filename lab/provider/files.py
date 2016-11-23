@@ -1,8 +1,9 @@
 import os
 import io
 import errno
+import json
 from xdg import BaseDirectory
-from .common import ProviderError
+from .common import ProviderError, pretty_json
 
 
 class Record(object):
@@ -10,18 +11,22 @@ class Record(object):
         data_dir = BaseDirectory.save_data_path('lab', 'v1', *path[:-1])
         self.path = os.path.join(data_dir, path[-1])
 
+    @property
+    def data(self):
         try:
             with io.open(self.path, 'r') as fp:
-                self.data = fp.read()
+                return json.loads(fp.read())
         except IOError as e:
             if e.errno == errno.ENOENT:
-                self.data = None
+                return {}
             else:
                 raise ProviderError(e)
+        except ValueError:  # no json to read
+            return {}
 
     def push(self, data):
         with io.open(self.path, 'w', encoding='utf-8') as fp:
-            return fp.write(data)
+            return fp.write(pretty_json(data))
 
 
 class FileProvider(object):

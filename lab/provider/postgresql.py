@@ -1,10 +1,12 @@
 import os
+import json
 import sqlalchemy
 from sqlalchemy import Column, Integer, Text
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
+from .common import pretty_json
 
 
 Base = declarative_base()
@@ -18,6 +20,8 @@ class JSONRecord(Base):
 
 
 class Record(object):
+    """A json record.
+    """
     def __init__(self, session, *path):
         self.session = session
         self.path = os.path.join(*path)
@@ -31,10 +35,10 @@ class Record(object):
 
     @property
     def data(self):
-        return self.row.doc
+        return json.loads(self.row.doc) if self.row.doc else {}
 
     def push(self, data):
-        self.row.doc = data
+        self.row.doc = pretty_json(data)
         self.session.commit()
 
 

@@ -1,5 +1,6 @@
 import logging
-from ..config import load_lab_config
+import py.path
+import yaml
 from .common import ProviderError
 from .files import FileProvider
 from .etcd import EtcdProvider
@@ -9,31 +10,66 @@ from .postgresql import PostgresqlProvider
 log = logging.getLogger(__name__)
 
 
-BACKENDS = {backend.name: backend
-            for backend in [FileProvider, EtcdProvider,
-                            PostgresqlProvider]}
+def load_yaml_config():
+    """Load data from the file lab.yaml.
+
+    Start looking in the PWD and return the first file found by successive
+    upward steps in the file system.
+    """
+    path = py.path.local()
+    for basename in path.parts(reverse=True):
+        configfile = basename.join('lab.yaml')
+        if configfile.check():
+            return yaml.load(configfile.read())
+    return {}
 
 
-def load_backends(config=None):
-    if not config:
-        config = load_lab_config().get('providers')
+class ProviderManager(object):
+    """Manage environment provider backends.
+    """
+    types = {
+        'files': FileProvider,
+        'etcd': EtcdProvider,
+        'postgresql': PostgresqlProvider,
+    }
 
-    backends = []
-    for node in config:
-        log.debug("Found config entry {}".format(node))
+    @classmethod
+    def add_store(cls, name, store):
+        if name in cls.stores:
+            log.warn("Overwriting {} store with {}".format(
+                name, store))
+
+        cls.types[name] = store
+
+    @classmethod
+    def get_store(cls, name):
+        return cls.types.get(name)
+
+
+def load_stores(args):
+    """Load data store instances (stores) for each provider name and args
+    in ``args``.
+    """
+    providers = []
+    for name, kwargs in args:
+        log.debug("Found provider entry {}".format(name))
+        provider = ProviderManager.types[name](kwargs)  # create instance
+        providers.append(provider)
+    return providers
+
+
+def get_providers(targets=None, yamlconf=None):
+    if isinstance(targets, str):
+        # parse `targets` comma separated str
+        targets = set(x.strip() for x in targets.split(','))
+
+    yamlconf = yamlconf or load_yaml_config()
+    assert yamlconf, 'No config file (lab.yaml) could be found?'
+
+    provider_args = []
+    for node in yamlconf.get('providers'):
         name, kwargs = node.items()[0]
-        backend = BACKENDS[name](kwargs)
-        backends.append(backend)
-    return backends
+        if not targets or name in targets:
+            provider_args.append((name, kwargs))
 
-
-def get_providers(targets, config):
-    backends_config = config.get('providers')
-    if not backends_config:
-        if targets:  # parse `targets` comma separated str
-            targets_set = set(x.strip() for x in targets.split(','))
-            backends_config = [{target: None} for target in targets_set]
-        else:
-            backends_config = [{'files': None}]
-
-    return load_backends(backends_config)
+    return load_stores(provider_args)

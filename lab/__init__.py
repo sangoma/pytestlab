@@ -1,5 +1,5 @@
-from .provider import load_backends
-from .model import Environment, Equipment
+from .provider import get_providers
+from .model import Environment, Facts
 
 # built-in plugin loading
 pytest_plugins = (
