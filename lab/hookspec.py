@@ -18,6 +18,13 @@ def pytest_lab_role_created(config, ctl):
     """
 
 
+@pytest.hookspec
 def pytest_lab_role_destroyed(config, ctl):
     """Called when a role controller is destroyed.
+    """
+
+
+@pytest.hookspec
+def pytest_lab_add_providers(config, providermanager):
+    """Called to enable adding addtional/external environment providers.
     """

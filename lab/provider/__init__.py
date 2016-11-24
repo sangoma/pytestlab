@@ -34,15 +34,15 @@ class ProviderManager(object):
     }
 
     @classmethod
-    def add_store(cls, name, store):
-        if name in cls.stores:
+    def add(cls, name, storetype):
+        if name in cls.types:
             log.warn("Overwriting {} store with {}".format(
-                name, store))
+                name, storetype))
 
-        cls.types[name] = store
+        cls.types[name] = storetype
 
     @classmethod
-    def get_store(cls, name):
+    def get(cls, name):
         return cls.types.get(name)
 
 
@@ -51,25 +51,33 @@ def load_stores(args):
     in ``args``.
     """
     providers = []
-    for name, kwargs in args:
+    for name, configdict in args:
         log.debug("Found provider entry {}".format(name))
-        provider = ProviderManager.types[name](kwargs)  # create instance
+        provider = ProviderManager.types[name](configdict)  # create instance
         providers.append(provider)
     return providers
 
 
-def get_providers(targets=None, yamlconf=None):
+def get_providers(targets=None, yamlconf=None, pytestconfig=None):
     if isinstance(targets, str):
         # parse `targets` comma separated str
         targets = set(x.strip() for x in targets.split(','))
 
-    yamlconf = yamlconf or load_yaml_config()
-    assert yamlconf, 'No config file (lab.yaml) could be found?'
-
     provider_args = []
-    for node in yamlconf.get('providers'):
-        name, kwargs = node.items()[0]
-        if not targets or name in targets:
-            provider_args.append((name, kwargs))
+    yamlconf = yamlconf or load_yaml_config()
+    if pytestconfig and pytestconfig.option.env != 'anonymous' or targets:
+        assert yamlconf, 'No config file (lab.yaml) could be found?'
+        for node in yamlconf.get('providers'):
+            name, configdict = node.items()[0]
+            if not targets or name in targets:
+                provider_args.append((name, configdict))
+
+    if pytestconfig:
+        for name, configdict in pytestconfig.hook.pytest_lab_add_providers(
+            config=pytestconfig,
+            providermanager=ProviderManager
+        ):
+            if name:
+                provider_args.append((name, configdict))
 
     return load_stores(provider_args)

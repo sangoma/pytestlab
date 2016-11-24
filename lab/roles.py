@@ -198,15 +198,15 @@ class EnvManager(object):
     def __getitem__(self, rolename):
         """Return all locations hosting a role with ``rolename`` in a list.
         """
-        equipment = self.env.get(rolename)
-        if not equipment:
+        locations = self.env.get(rolename)
+        if not locations:
             raise EquipmentLookupError(
                 "'{}' not found in environment '{}'"
                 "\nDid you pass the wrong environment name with --env=NAME ?"
                 .format(rolename, self.name))
 
-        # NOTE: for equipment models their `name` should be a hostname
-        return [self.manage(eq.name, facts=eq) for eq in equipment]
+        # NOTE: for locations models their `name` should be a hostname
+        return [self.manage(loc.name, facts=loc) for loc in locations]
 
     def find(self, rolename):
         """Lookup and return a list of all role instance ctls registered with
@@ -256,10 +256,7 @@ def pytest_configure(config):
     """
     providers = []
     envname = config.option.env
-    if envname != 'anonymous':
-        # load lab.yaml
-        labyaml = lab.provider.load_yaml_config()
-        providers = lab.get_providers()
+    providers = lab.get_providers(pytestconfig=config)
 
     envmng = EnvManager(envname, config, providers)
 
