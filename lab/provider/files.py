@@ -36,5 +36,5 @@ class FileProvider(object):
         # We don't support and configuration, so intentionally empty
         pass
 
-    def get(self, *path):
+    def get(self, *path, **kwargs):
         return Record(*path)

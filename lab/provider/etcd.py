@@ -58,5 +58,5 @@ class EtcdProvider(object):
         except etcd.EtcdException as e:
             raise ProviderError("Failed to connect to etcd: {}".format(e))
 
-    def get(self, *path):
+    def get(self, *path, **kwargs):
         return Record(self.client, *path)

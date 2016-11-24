@@ -11,17 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 class ProvidersMixin(object):
-    def __init__(self, name, providers):
+    def __init__(self, name, providers, **kwargs):
         self.records = []
         self.name = name
         self.providers = providers
+        self.kwargs = kwargs
         ident = self.modelid  # subclass defined
         logger.debug("Creating {} '{}'".format(ident, name))
 
         for store in providers:
             logger.debug("{}: reading {} '{}'".format(
                 store.name, ident, self.name))
-            record = store.get(ident, name)
+            record = store.get(ident, name, **self.kwargs)
             self.records.append((store, record))
 
         logger.debug("Records: {}".format(pformat(self.records)))
@@ -124,20 +125,24 @@ class Environment(ProvidersMixin):
     def view(self):
         """A role mapping view across all environment providers.
         """
-        locset = set()
+        locsets = {}
         roles = {}
         for store, record in self.records:
             for rolename, locations in record.data.items():
                 logger.debug("{}: found role '{}' -> {}"
                              .format(store.name, rolename, locations))
+
                 # check for duplicates across providers
-                new = set(locations)
-                union = new & locset
-                locset.update(new)
-                if union:
-                    logger.error("Discarding duplicate '{}' location(s): {}"
-                                 .format(store.name, list(union)))
-                    continue
+                locset = locsets.setdefault(rolename, set())
+                for loc in locset:
+                    if loc in locations:
+                        logger.error(
+                            "Discarding duplicate '{}' {} location '{}'"
+                            .format(store.name, rolename, loc)
+                        )
+                        locations.remove(loc)
+
+                locset.update(set(locations))
 
                 roles.setdefault(
                     rolename, collections.OrderedDict()
@@ -145,10 +150,10 @@ class Environment(ProvidersMixin):
 
         return roles
 
-    def __getitem__(self, rolename):
+    def __getitem__(self, role):
         equipment = []
-        for _, locations in self.view[rolename].items():
+        for _, locations in self.view[role].items():
             for location in locations:
-                equipment.append(Facts(location, self.providers))
+                equipment.append(Facts(location, self.providers, role=role))
 
         return equipment

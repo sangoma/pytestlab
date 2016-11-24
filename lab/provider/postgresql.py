@@ -51,5 +51,5 @@ class PostgresqlProvider(object):
 
         Base.metadata.create_all(engine)
 
-    def get(self, *path):
+    def get(self, *path, **kwargs):
         return Record(self.session, *path)
