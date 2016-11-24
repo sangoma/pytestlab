@@ -104,8 +104,7 @@ def forward_tunnel(ssh, local_port, remote_host, remote_port):
 
 
 def tunnel_factory(ssh, remotehost, remoteport):
-    """Context manager to generate socket tunnels over SSH and teardown all
-    on exit.
+    """Create tunnels using a random local loopback socket.
     """
     # allocated a random port locally
     host, port = get_new_sock('127.0.0.1')
