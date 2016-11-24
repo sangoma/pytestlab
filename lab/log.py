@@ -16,7 +16,7 @@ FORMAT = "%(asctime)s [%(levelname)s] %(name)s %(filename)s:"\
 
 
 def pytest_namespace():
-    return {'log': logging.getLogger('pytest')}
+    return {'log': logging.getLogger('pytestlab')}
 
 
 @pytest.hookimpl(tryfirst=True)
