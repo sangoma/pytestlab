@@ -114,7 +114,7 @@ def find_best_route(dst_host, dev_list=None, version=4):
 
     Returns
     -------
-    IpDevice : Named tuple containing ip, mask, and interface name
+    ifacename, ipaddr: tuple of (<interface name>, <ipaddr>)
     '''
     dst_host = check_ipaddr(dst_host, version=version)[0]
     family = version_to_family(version)

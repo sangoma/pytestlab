@@ -9,6 +9,7 @@ import socket
 import threading
 import SocketServer
 import plumbum
+from . import get_new_sock
 
 
 logger = logging.getLogger(__name__)
@@ -75,7 +76,8 @@ class Tunnel(object):
 def forward_tunnel(ssh, local_port, remote_host, remote_port):
     # This requires a ParamikoMachine. Use SshMachine tunnel support for
     # compatability, but it lacks configuring the remote host
-    if isinstance(ssh, plumbum.SshMachine):
+    inst = getattr(ssh, 'driver', ssh)  # may be a connection proxy
+    if isinstance(inst, plumbum.SshMachine):
         localhosts = ['localhost', '127.0.0.1', '::1']
         assert remote_host in localhosts, 'Minimal support for SshMachine'
         return ssh.tunnel(local_port, remote_port)
@@ -99,3 +101,17 @@ def forward_tunnel(ssh, local_port, remote_host, remote_port):
     server_thread.daemon = True
     server_thread.start()
     return Tunnel(server)
+
+
+def tunnel_factory(ssh, remotehost, remoteport):
+    """Context manager to generate socket tunnels over SSH and teardown all
+    on exit.
+    """
+    # allocated a random port locally
+    host, port = get_new_sock('127.0.0.1')
+    tunnel = forward_tunnel(ssh, port, remotehost, remoteport)
+    logger.info(
+        'Established ssh tunnel from local {}:{} to remote {}:{}'
+        .format(host, port, remotehost, remoteport)
+    )
+    return tunnel, '127.0.0.1', port

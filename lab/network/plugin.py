@@ -1,8 +1,8 @@
 """
 High level networking helpers
 """
-import pytest
 import socket
+import pytest
 import contextlib2
 from .. import network
 
