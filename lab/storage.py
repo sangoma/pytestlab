@@ -90,7 +90,7 @@ class StorageManager(object):
     @pytest.hookimpl
     def pytest_lab_process_logs(self, config, item, logs):
         for ctl, logset in logs.iteritems():
-            prefix_path = '@'.join((ctl.name, ctl.hostname))
+            prefix_path = '@'.join((ctl.name, ctl.location.hostname))
             prefix_dir = self.get_storage(item).join('logs').join(prefix_path)
             prefix_dir.mkdir()
 
