@@ -87,6 +87,14 @@ class Location(object):
         role = pytest.rolemanager.build(name, self, **kwargs)
         role._key = key
         self.roles[key] = role
+        try:
+            loc = getattr(role, 'location')
+            assert loc is self, 'Location mismatch for control {}'.format(role)
+        except AttributeError:
+            raise AttributeError(
+                'Role control {} must define a `.location` attribute'
+                .format(role)
+            )
 
         # register sw role controllers as pytest plugins
         config.pluginmanager.register(
