@@ -1,6 +1,5 @@
 import logging
-import py.path
-import yaml
+from ..config import load_yaml_config
 from .common import ProviderError
 from .files import FileProvider
 from .etcd import EtcdProvider
@@ -8,20 +7,6 @@ from .postgresql import PostgresqlProvider
 
 
 log = logging.getLogger(__name__)
-
-
-def load_yaml_config():
-    """Load data from the file lab.yaml.
-
-    Start looking in the PWD and return the first file found by successive
-    upward steps in the file system.
-    """
-    path = py.path.local()
-    for basename in path.parts(reverse=True):
-        configfile = basename.join('lab.yaml')
-        if configfile.check():
-            return yaml.load(configfile.read())
-    return {}
 
 
 class ProviderManager(object):
