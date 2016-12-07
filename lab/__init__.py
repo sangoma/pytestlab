@@ -10,4 +10,5 @@ pytest_plugins = (
     'lab.log',
     'lab.warnreporter',
     'lab.network.plugin',
+    'lab.ctl.rpc',
 )
