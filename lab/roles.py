@@ -268,6 +268,8 @@ def pytest_addoption(parser):
     group.addoption(
         '--no-locks', action='store_true',
         help='Tell pytestlab to never lock environments or locations')
+    group.addoption('--discovery-srv', action='store', required=False,
+                    help='The domain to use when looking up SRV records')
 
 
 def pytest_configure(config):
