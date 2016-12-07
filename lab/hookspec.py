@@ -1,6 +1,11 @@
 import pytest
 
 
+@pytest.hookspec
+def pytest_lab_configure(envmanager):
+    """pytestlab startup"""
+
+
 @pytest.hookspec(historic=True)
 def pytest_lab_addroles(config, rolemanager):
     """new role registered"""

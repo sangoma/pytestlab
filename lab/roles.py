@@ -6,7 +6,7 @@ from collections import MutableMapping
 import lab
 from .utils import cached_property
 from _pytest.runner import TerminalRepr
-from .lock import EnvironmentLock
+from .lock import ResourceLocker
 
 
 logger = logging.getLogger(__name__)
@@ -167,19 +167,16 @@ class Location(object):
 
 
 class EnvManager(object):
-    def __init__(self, name, config, providers):
+    def __init__(self, name, config, providers, locker=None, neverlock=None):
         self.config = config
         self.name = name
         self._providers = list(providers)
         self.env = lab.Environment(self.name, self._providers)
+        self.locker = locker
+        self.neverlock = set(neverlock) if neverlock else set()
 
-        # XXX a hack to get a completely isolated setup for now
-        self.lock = None
-        if len(self._providers) > 1:
-            self.lock = EnvironmentLock.aquire(config.option.user,
-                                               config.option.env,
-                                               config.option.discovery_srv,
-                                               config.option.wait_on_lock)
+        if locker and name != 'anonymous':
+            self.locker.acquire(self.name, wait=not config.option.no_lock_wait)
 
         config.hook.pytest_lab_addroles.call_historic(
             kwargs=dict(config=self.config, rolemanager=pytest.rolemanager)
@@ -214,7 +211,18 @@ class EnvManager(object):
                 .format(rolename, self.name))
 
         # NOTE: for locations models their `name` should be a hostname
-        return [self.manage(loc.name, facts=loc) for loc in locations]
+        locs = [self.manage(loc.name, facts=loc) for loc in locations]
+
+        # lock locations
+        if self.locker and rolename not in self.neverlock:
+            for loc in locs:
+                key = loc.hostname
+                # can't recurrently lock
+                if not self.locker.is_locked(key):
+                    self.locker.acquire(
+                        key, wait=not self.config.option.no_lock_wait)
+
+        return locs
 
     def find(self, rolename):
         """Lookup and return a list of all role instance ctls registered with
@@ -234,8 +242,8 @@ class EnvManager(object):
             for location in self.locations.itervalues():
                 location.cleanup()
         finally:
-            if self.lock:
-                self.lock.release()
+            if self.locker:
+                self.locker.release_all()
 
 
 def pytest_namespace():
@@ -255,8 +263,11 @@ def pytest_addoption(parser):
                     help='Test environment name')
     group.addoption('--user', action='store',
                     help='Explicit user to lock the test environment with')
-    group.addoption('--wait-on-lock', action='store_true',
-                    help='Tell pytest to wait for dut to unlock')
+    group.addoption('--no-lock-wait', action='store_true',
+                    help='Tell pytestlab not to wait for any resource locks')
+    group.addoption(
+        '--no-locks', action='store_true',
+        help='Tell pytestlab to never lock environments or locations')
 
 
 def pytest_configure(config):
@@ -264,9 +275,21 @@ def pytest_configure(config):
     """
     providers = []
     envname = config.option.env
-    providers = lab.get_providers(pytestconfig=config)
+    yamlconf = lab.config.load_yaml_config()
+    providers = lab.get_providers(yamlconf=yamlconf, pytestconfig=config)
 
-    envmng = EnvManager(envname, config, providers)
+    discovery_srv = config.getoption(
+        'discovery_srv', yamlconf.get('discovery-srv'))
+
+    locker = ResourceLocker(
+        envname,
+        discovery_srv,
+    ) if not config.option.no_locks and discovery_srv else None
+
+    envmng = EnvManager(
+        envname, config, providers, locker,
+        neverlock=yamlconf.get('neverlock')
+    )
 
     # ensure the env defines at least some data
     if envname != 'anonymous' and not envmng.env.view:
@@ -274,6 +297,8 @@ def pytest_configure(config):
 
     config.pluginmanager.register(envmng, 'environment')
     config.add_cleanup(envmng.cleanup)
+
+    config.hook.pytest_lab_configure(envmanager=envmng)
 
     # make globally accessible
     pytest.env = envmng

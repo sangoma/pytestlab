@@ -1,4 +1,3 @@
-import pytest
 import time
 import os
 import posixpath
@@ -6,6 +5,11 @@ import socket
 import threading
 import srvlookup
 import etcd
+import logging
+from collections import OrderedDict
+
+
+logger = logging.getLogger('pytestlab')
 
 
 class EnvironmentLocked(Exception):
@@ -18,47 +22,76 @@ def find_etcd_server(domain):
     return etcd.Client(host=records[0].host, port=2379)
 
 
-class EnvironmentLock(threading.Thread):
-    def __init__(self, env, domain, lockmsg, wait=False, ttl=60):
-        self.etcd = find_etcd_server(domain)
-        self.lockpath = posixpath.join('sangoma', 'lab', env, 'lock')
+class ResourceLocker(object):
+    def __init__(self, env, discovery_srv, ttl=60):
+        self.env = env
+        self.etcd = find_etcd_server(discovery_srv)
+        # self.envpath = posixpath.join('lab', env, 'lock')
+        self.locks = OrderedDict()
+        self.ttl = ttl
 
-        msg = self._readkey()
-        while msg:
-            pytest.log.error('{} is locked by {}, waiting {} seconds for lock '
-                             'to expire...'.format(env, msg.value, msg.ttl))
-            time.sleep(msg.ttl + 1)
-            msg = self._readkey()
-            if msg and not wait:
-                raise EnvironmentLocked('{} is currently locked '
-                                        'by {}'.format(env, msg.value))
-
+        # provision keep-alive worker
         self._stop = threading.Event()
-        self._thread = threading.Thread(target=self._worker,
-                                        args=(lockmsg, ttl))
-        self._thread.start()
+        self._thread = threading.Thread(target=self._worker)
 
-    def _readkey(self):
+    def acquire(self, path, wait=True, user=None):
+        # check if in use
+        msg = self._readkey(self._makekey(path))
+        if wait and msg:
+            logger.error('{} is locked by {}, waiting {} seconds for lock '
+                         'to expire...'.format(path, msg.value, msg.ttl))
+            time.sleep(msg.ttl + 1)
+
+        msg = self._readkey(self._makekey(path))
+        if msg:
+            raise EnvironmentLocked(
+                '{} is currently locked by {}'.format(path, msg.value))
+
+        # acquire
+        key = self._makekey(path)
+        lockid = '{}@{}'.format(user or os.environ["USER"], socket.getfqdn())
+        self.etcd.write(key, lockid, ttl=self.ttl)
+        logger.debug("Locked {}:{} for {}".format(key, lockid, self.env))
+
+        # start keep-alive
+        if not self._thread.is_alive():
+            self._thread.start()
+
+        self.locks[key] = lockid
+        return path, lockid
+
+    def _makekey(self, path):
+        return posixpath.join('lab', 'locks', path)
+
+    def _readkey(self, key):
         try:
-            return self.etcd.read(self.lockpath)
+            return self.etcd.read(key)
         except etcd.EtcdKeyNotFound:
             return None
 
-    def _worker(self, lockmsg, ttl):
-        self.etcd.write(self.lockpath, lockmsg, ttl=ttl)
-        while not self._stop.wait(ttl / 2):
-            self.etcd.write(self.lockpath, lockmsg, ttl=ttl)
+    def _worker(self):
+        logger.debug("Starting keep-alive thread...")
+        while not self._stop.wait(self.ttl / 2):
+            for key, lockid in self.locks.items():
+                logger.debug(
+                    "Relocking {}:{} for {}".format(key, lockid, self.env))
+                self.etcd.write(key, lockid, ttl=self.ttl)
 
+        for key in self.locks:
+            self.release(key)
+
+    def release(self, path):
+        key = self._makekey(path) if path not in self.locks else path
+        self.locks.pop(key)
         try:
-            self.etcd.delete(self.lockpath)
+            self.etcd.delete(key)
         except etcd.EtcdKeyNotFound:
             pass
 
-    def release(self):
+    def release_all(self):
         self._stop.set()
-        self._thread.join()
+        if self._thread.is_alive():
+            self._thread.join()
 
-    @classmethod
-    def aquire(cls, user, env, discovery_srv, wait):
-        lockmsg = '{}@{}'.format(user or os.environ["USER"], socket.getfqdn())
-        return cls(env, discovery_srv, lockmsg, wait)
+    def is_locked(self, path):
+        return self._makekey(path) in self.locks
