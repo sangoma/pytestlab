@@ -10,7 +10,7 @@ import lab
 
 @pytest.fixture
 def dut_loc():
-    """Access the `dut` role's location implicitly locking it.
+    """Access the `dut` role's location with an implicit lock.
     """
     loc = pytest.env.get_locations('dut')[0]
     assert loc in pytest.env
