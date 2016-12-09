@@ -6,7 +6,7 @@ from .etcd import EtcdProvider
 from .postgresql import PostgresqlProvider
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('pytestlab.provider')
 
 
 class ProviderManager(object):
@@ -19,7 +19,7 @@ class ProviderManager(object):
     }
 
     @classmethod
-    def add(cls, name, storetype):
+    def add(cls, name, storetype, configdict=None):
         if name in cls.types:
             log.warn("Overwriting {} store with {}".format(
                 name, storetype))
@@ -55,6 +55,9 @@ def get_providers(targets=None, yamlconf=None, pytestconfig=None):
         for node in yamlconf.get('providers'):
             name, configdict = node.items()[0]
             if not targets or name in targets:
+                provtype = ProviderManager.get(name)
+                if not provtype:
+                    log.warn("No provider for {} exists?".format(name))
                 provider_args.append((name, configdict))
 
     if pytestconfig:
@@ -62,7 +65,7 @@ def get_providers(targets=None, yamlconf=None, pytestconfig=None):
             config=pytestconfig,
             providermanager=ProviderManager
         ):
-            if name:
-                provider_args.append((name, configdict))
+            assert name, "No provider name was returned?"
+            provider_args.append((name, configdict))
 
     return load_stores(provider_args)
