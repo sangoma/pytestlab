@@ -30,6 +30,12 @@ def pytest_lab_role_destroyed(config, ctl):
 
 
 @pytest.hookspec
+def pytest_lab_location_destroyed(config, location):
+    """Called when a location is released by the environment manager.
+    """
+
+
+@pytest.hookspec
 def pytest_lab_add_providers(config, providermanager):
     """Called to enable adding addtional/external environment providers.
     """
