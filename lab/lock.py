@@ -28,7 +28,7 @@ def find_etcd_server(domain):
 
 
 def get_lock_id(user=None):
-    return '{}@{}'.format(user or os.environ["USER"], socket.getfqdn())
+    return '{}@{}'.format(user or os.environ.get("USER", "anonymous"), socket.getfqdn())
 
 
 class ResourceLocker(object):
