@@ -59,11 +59,12 @@ class RoleManager(object):
 class Location(object):
     """A software hosting location contactable via its hostname
     """
-    def __init__(self, hostname, facts):
+    def __init__(self, hostname, facts, envmng):
         self.hostname = hostname
         if facts and not isinstance(facts, MutableMapping):
             raise ValueError('facts must be a mapping type')
         self.facts = facts or {}
+        self.envmng = envmng
         self.roles = {}
         self.log = logging.getLogger(hostname)
 
@@ -96,7 +97,7 @@ class Location(object):
                 .format(role)
             )
 
-        # register sw role controllers as pytest plugins
+        # register sw role controls as pytest plugins
         config.pluginmanager.register(
             role, name="{}@{}".format(name, self.hostname)
         )
@@ -109,7 +110,7 @@ class Location(object):
         return role
 
     def _close_role(self, role):
-        config = pytest.config
+        config = self.envmng.config
         config.hook.pytest_lab_role_destroyed(config=config, ctl=role)
         try:
             role.close()
@@ -174,10 +175,6 @@ class EnvManager(object):
         self.env = lab.Environment(self.name, self._providers)
         self.locker = locker
         self.neverlock = set(neverlock) if neverlock else set()
-
-        if locker and name != 'anonymous':
-            self.locker.acquire(self.name, wait=not config.option.no_lock_wait)
-
         config.hook.pytest_lab_addroles.call_historic(
             kwargs=dict(config=self.config, rolemanager=pytest.rolemanager)
         )
@@ -185,22 +182,28 @@ class EnvManager(object):
         # local cache
         self.locations = {}
 
-    def manage(self, hostname, facts=None):
+    def manage(self, hostname, facts=None, lock=True, timeout=None):
         """Manage a new software hosting location by `hostname`.
         `facts` is an optional dictionary of data.
         """
         try:
             location = self.locations[hostname]
         except KeyError:
-            location = Location(hostname, facts)
+            location = Location(hostname, facts, self)
             self.locations[hostname] = location
+
+            if lock and self.locker:
+                self.locker.acquire(location.hostname, timeout=timeout)
         else:
             if facts and dict(location.facts) != facts:
                 location.facts.update(facts)
 
         return location
 
-    def __getitem__(self, rolename):
+    def __getitem__(self, rolename, timeout=None):
+        return self.get_locations(rolename, timeout=timeout)
+
+    def get_locations(self, rolename, timeout=None):
         """Return all locations hosting a role with ``rolename`` in a list.
         """
         locations = self.env.get(rolename)
@@ -210,61 +213,76 @@ class EnvManager(object):
                 "\nDid you pass the wrong environment name with --env=NAME ?"
                 .format(rolename, self.name))
 
+        lock = rolename not in self.neverlock
+
         # NOTE: for locations models their `name` should be a hostname
-        locs = [self.manage(loc.name, facts=loc) for loc in locations]
+        return [self.manage(loc.name, facts=loc, lock=lock,
+                timeout=timeout) for loc in locations]
 
-        # lock locations
-        if self.locker and rolename not in self.neverlock:
-            for loc in locs:
-                key = loc.hostname
-                # can't recurrently lock
-                if not self.locker.is_locked(key):
-                    self.locker.acquire(
-                        key, wait=not self.config.option.no_lock_wait)
-
-        return locs
-
-    def find(self, rolename):
+    def find(self, rolename, timeout=None):
         """Lookup and return a list of all role instance ctls registered with
         ``rolename`` from all equipment in the test environment.
         """
-        locations = self[rolename]
+        locations = self.get_locations(rolename, timeout=timeout)
         return [loc.role(rolename) for loc in locations]
 
-    def find_one(self, rolename):
+    def find_one(self, rolename, timeout=None):
         """Find and return the first role instance registered with ``rolename``
         in the test environment.
         """
-        return self.find(rolename)[0]
+        return self.find(rolename, timeout=timeout)[0]
+
+    def destroy(self, location):
+        """Release a location and remove it from the internal cache.
+        """
+        assert isinstance(location, Location)
+        loc = self.locations.pop(location.hostname, None)
+        if not loc:
+            raise ValueError(
+                "Can't destroy unknown {}".format(location))
+
+        logger.info("Destroying {}".format(location))
+        # sanity
+        if loc is not location:
+            logger.warn("Destroying unknown location {}".format(location))
+        self.config.pluginmanager.hook.pytest_lab_location_destroyed(
+            config=self.config, location=location)
+        location.cleanup()
+        if self.locker:
+            self.locker.release(loc.hostname)
 
     def cleanup(self):
         try:
-            for location in self.locations.itervalues():
-                location.cleanup()
+            for location in self.locations.copy().values():
+                self.destroy(location)
         finally:
             if self.locker:
                 self.locker.release_all()
 
+    def __contains__(self, location):
+        return location.hostname in self.locations
 
+
+@pytest.hookimpl
 def pytest_namespace():
     return {'env': None,
             'rolemanager': RoleManager(),
             'EquipmentLookupError': EquipmentLookupError}
 
 
+@pytest.hookimpl
 def pytest_addhooks(pluginmanager):
     from . import hookspec
     pluginmanager.add_hookspecs(hookspec)
 
 
+@pytest.hookimpl
 def pytest_addoption(parser):
     group = parser.getgroup('environment')
     group.addoption('--env', action='store', default='anonymous',
                     help='Test environment name')
     group.addoption('--user', action='store',
                     help='Explicit user to lock the test environment with')
-    group.addoption('--no-lock-wait', action='store_true',
-                    help='Tell pytestlab not to wait for any resource locks')
     group.addoption(
         '--no-locks', action='store_true',
         help='Tell pytestlab to never lock environments or locations')
@@ -272,6 +290,15 @@ def pytest_addoption(parser):
                     help='The domain to use when looking up SRV records')
 
 
+def get_srv(pytestconfig, yamlconfig, skip=False):
+    ds = yamlconfig.get('discovery-srv')
+    if not ds:
+        ds = pytestconfig.getoption('discovery_srv', skip=skip)
+
+    return ds
+
+
+@pytest.hookimpl
 def pytest_configure(config):
     """Set up the test environment.
     """
@@ -279,9 +306,7 @@ def pytest_configure(config):
     envname = config.option.env
     yamlconf = lab.config.load_yaml_config()
     providers = lab.get_providers(yamlconf=yamlconf, pytestconfig=config)
-
-    discovery_srv = config.getoption(
-        'discovery_srv', yamlconf.get('discovery-srv'))
+    discovery_srv = get_srv(config, yamlconf)
 
     locker = ResourceLocker(
         envname,
@@ -304,6 +329,18 @@ def pytest_configure(config):
 
     # make globally accessible
     pytest.env = envmng
+
+
+@pytest.fixture(scope='session')
+def discovery_srv(pytestconfig):
+    """Discover srv string as passing in to the CLI or parse from lab.yaml.
+    """
+    yamlconf = lab.config.load_yaml_config()
+    ds = get_srv(pytestconfig, yamlconf, skip=True)
+    # sanity
+    assert ds
+    assert pytest.env.locker.discovery_srv == ds
+    return ds
 
 
 @pytest.fixture(scope='session')
