@@ -1,13 +1,14 @@
-import pytest
 import time
-import json
+import pytest
 import logging
 import docker as dockerpy
 import plumbum
 import contextlib
+import lab
+from .mocks import lab as mocklab
 
 
-pytest_plugins = ("pytester", 'lab')
+pytest_plugins = ['lab', 'pytester', mocklab.__name__]
 
 
 @pytest.fixture(scope='session')
