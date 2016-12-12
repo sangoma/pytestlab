@@ -2,7 +2,7 @@
 import pytest
 import logging
 import socket
-from collections import MutableMapping
+from collections import MutableMapping, OrderedDict
 import lab
 from .utils import cached_property
 from _pytest.runner import TerminalRepr
@@ -65,7 +65,7 @@ class Location(object):
             raise ValueError('facts must be a mapping type')
         self.facts = facts or {}
         self.envmng = envmng
-        self.roles = {}
+        self.roles = OrderedDict()
         self.log = logging.getLogger(hostname)
 
     def __repr__(self):
@@ -119,12 +119,13 @@ class Location(object):
         pytest.env.config.pluginmanager.unregister(plugin=role)
 
     def destroy(self, role):
+        self.log.debug("Destroying role {}".format(role._key))
         role = self.roles.pop(role._key, None)
         if role:
             self._close_role(role)
 
     def cleanup(self):
-        for role in self.roles.copy().values():
+        for role in reversed(self.roles.copy().values()):
             self.destroy(role)
         # sanity
         assert not len(self.roles), "Some roles weren't destroyed {}?".format(
@@ -180,7 +181,7 @@ class EnvManager(object):
         )
 
         # local cache
-        self.locations = {}
+        self.locations = OrderedDict()
 
     def manage(self, hostname, facts=None, lock=True, timeout=None):
         """Manage a new software hosting location by `hostname`.
@@ -253,7 +254,7 @@ class EnvManager(object):
 
     def cleanup(self):
         try:
-            for location in self.locations.copy().values():
+            for location in reversed(self.locations.copy().values()):
                 self.destroy(location)
         finally:
             if self.locker:
