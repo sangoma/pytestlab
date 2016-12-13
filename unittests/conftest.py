@@ -1,3 +1,4 @@
+import gc
 import time
 import pytest
 import logging
@@ -66,7 +67,10 @@ def alpine_ssh(docker):
                     plumbum.SshMachine(
                         host, port=port, user='root', password='root')
                 except plumbum.machines.session.SSHCommsError:
-                    # connection not up yet
+                    # connection not up yet, cleanup the previous
+                    # connection. Otherwise we'll leak file
+                    # descriptors like crazy
+                    gc.collect()
                     continue
                 break
 
