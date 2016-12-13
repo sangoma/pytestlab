@@ -78,7 +78,8 @@ def alpine_ssh(docker):
     def start(host=host, port=port):
         """Start an alpine-linux container running sshd.
         """
-        with docker.image('sickp/alpine-sshd', ports={22: (host, port)}):
+        with docker.image('sickp/alpine-sshd', ports={22: (host, port)},
+                          networks=['testlab']):
             # wait for sshd to come up
             begin = time.time()
             while time.time() - begin < 5:

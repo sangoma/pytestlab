@@ -71,7 +71,13 @@ class MacVLan(object):
         vlan.commit()
 
         # Start dhcp process if necessary
-        self.dhcp = DHCP(vlan) if dhcp else None
+        try:
+            self.dhcp = DHCP(vlan) if dhcp else None
+        except RuntimeError:
+            vlan.remove()
+            vlan.commit()
+            self.ipdb.release()
+            raise
 
     @property
     def addresses(self):
@@ -117,6 +123,7 @@ class MacVLan(object):
         """
         if self.dhcp:
             self.dhcp.close()
+            self.dhcp = None
 
         if self.exists:
             self.ipdb.interfaces[self.name].remove().commit()
