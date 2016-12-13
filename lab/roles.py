@@ -347,7 +347,7 @@ def discovery_srv(pytestconfig):
 @pytest.fixture(scope='session')
 def dut_host(dut_ctl):
     'Retreive the hostname str for the current dut'
-    host = dut_ctl.hostname
+    host = dut_ctl.location.hostname
     assert host
     return host
 
