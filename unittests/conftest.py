@@ -4,7 +4,6 @@ import logging
 import docker as dockerpy
 import plumbum
 import contextlib
-import lab
 from .mocks import lab as mocklab
 
 
