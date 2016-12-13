@@ -71,7 +71,7 @@ class MacVLan(object):
         vlan.commit()
 
         # Start dhcp process if necessary
-        self.dhcp = DHCP(self) if dhcp else None
+        self.dhcp = DHCP(vlan) if dhcp else None
 
     @property
     def addresses(self):
