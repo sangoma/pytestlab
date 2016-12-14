@@ -101,7 +101,7 @@ def poll_for_patt(patt, pexpect):
     return ''.join(lines)
 
 
-def poll_pexpect(pexpect, timeout=3):
+def poll_pexpect(pexpect, timeout=5):
     start = time.time()
     while time.time() - start < timeout:
         if not pexpect.isalive():
