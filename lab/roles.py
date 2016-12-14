@@ -354,7 +354,7 @@ def dut_host(dut_ctl):
 
 @pytest.fixture(scope='session')
 def dut_ip(dut_ctl, addr_family):
-    return dut_ctl.addrinfo[addr_family]
+    return dut_ctl.location.addrinfo[addr_family]
 
 
 @pytest.hookimpl(hookwrapper=True)
