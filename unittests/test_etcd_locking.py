@@ -111,6 +111,7 @@ def poll_pexpect(pexpect, timeout=5):
         assert not pexpect.isalive()
 
 
+@pytest.mark.skip('pexpect timing logic is unreliable')
 def test_wait_on_lock(testdir, discovery_srv, testplugin, dut_loc):
     """Verify that a session can unlock a resource for the next waiter.
     """
