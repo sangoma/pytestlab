@@ -1,6 +1,7 @@
 """
 Communication drivers and connection management.
 """
+from builtins import object
 import logging
 from lab.ssh import get_ssh, get_sftp
 

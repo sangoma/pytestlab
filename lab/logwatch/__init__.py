@@ -1,6 +1,10 @@
 """
 Log monitoring and capture.
 """
+from __future__ import division
+from builtins import next
+from builtins import str
+from builtins import object
 import datetime
 import posixpath
 import itertools
@@ -33,7 +37,7 @@ class logfiles(object):
         that exists. """
         def numbered_log(ctl, logdir, logname):
             remote = get_ssh(ctl).path(logdir)
-            remote_log = remote / logname
+            remote_log = remote.join(logname)
             if not remote_log.exists():
                 return
             yield remote_log
@@ -42,8 +46,8 @@ class logfiles(object):
             # any reason, we won't notice. Might cause problems.
             # Hopefully not something we'll have to deal with...
             for idx in itertools.count(1):
-                remote_log = remote / posixpath.extsep.join(
-                    (logname, str(idx)))
+                remote_log = remote.join(posixpath.extsep.join(
+                    (logname, str(idx))))
                 if not remote_log.exists():
                     return
                 yield remote_log
@@ -127,7 +131,7 @@ class LogManager(object):
         """
         self.recovered_logs = {}
         self.config.hook.pytest_lab_log_rotate()
-        for sources in self.sources.itervalues():
+        for sources in self.sources.values():
             for source in sources:
                 source.prepare()
         yield
@@ -137,7 +141,7 @@ class LogManager(object):
         """Collect and store logs on test teardown.
         """
         yield
-        for ctl, sources in self.sources.iteritems():
+        for ctl, sources in self.sources.items():
             self._capture_logs(ctl, sources)
 
         self.config.hook.pytest_lab_process_logs(

@@ -1,6 +1,8 @@
 """
 Test inter-session locking via etcd
 """
+from __future__ import print_function
+from __future__ import absolute_import
 import signal
 import time
 import inspect

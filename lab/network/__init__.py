@@ -4,6 +4,11 @@ This module contains the following networkng helpers:
 - ip address generator for the localhost
 - best route calculator
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import str
+from builtins import next
+from builtins import range
 import ipaddress
 import errno
 import socket
@@ -12,7 +17,7 @@ import contextlib
 import pyroute2
 import pyroute2.iproute
 import plumbum
-from ping import ping_cmds
+from .ping import ping_cmds
 
 # re-exports
 from .macvlan import MacVLan

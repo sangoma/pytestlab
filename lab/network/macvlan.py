@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 import time
 import logging
 import socket
@@ -11,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def _generate_device_name(prefix):
     with pyroute2.IPDB() as ipdb:
-        for idx in xrange(100):
+        for idx in range(100):
             name = '{}{}'.format(prefix, idx)
             if name not in ipdb.interfaces:
                 return name

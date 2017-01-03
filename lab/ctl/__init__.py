@@ -1,6 +1,7 @@
 """
 Built-in software role controllers.
 """
+from builtins import object
 from ..comms import connection
 
 

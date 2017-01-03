@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import pytest
 import collections
 import warnings
@@ -8,7 +10,7 @@ def folded_warnings(warnings):
                  str(warning.lineno),
                  str(warning.message)) for warning in warnings)
 
-    for event, count in collections.Counter(messages).iteritems():
+    for event, count in collections.Counter(messages).items():
         yield count, event
 
 

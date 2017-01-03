@@ -1,3 +1,5 @@
+from __future__ import division
+from builtins import object
 import time
 import os
 import posixpath
@@ -99,8 +101,8 @@ class ResourceLocker(object):
 
     def _keepalive(self):
         logger.debug("Starting keep-alive thread...")
-        while not self._stop.wait(self.ttl / 2):
-            for key, lockid in self.locks.items():
+        while not self._stop.wait(self.ttl // 2):
+            for key, lockid in list(self.locks.items()):
                 logger.debug(
                     "Relocking {}:{} for {}".format(key, lockid, self.env))
                 self.etcd.write(key, lockid, ttl=self.ttl)

@@ -1,11 +1,13 @@
 """
 Handy utilities
 """
+from builtins import map
+from builtins import object
 import os
 import string
 
 
-PATTERN = string.letters + string.digits + '_' + '.'
+PATTERN = string.ascii_letters + string.digits + '_' + '.'
 
 
 def encode_char(c):

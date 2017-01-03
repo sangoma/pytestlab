@@ -36,7 +36,6 @@ setup_params = dict(
         'colorlog',
         'contextlib2',
         'dnspython',
-        'enum34',
         'python-ESL',
         'ipaddress',
         'jenkinsapi',
@@ -69,12 +68,22 @@ setup_params = dict(
         'six',
         'SQLAlchemy',
         'srvlookup',
-        'subprocess32',
         'switchy',
         'tftpy',
         'vegapy',
         'bravado',
     ],
+    extras_require={
+        ':python_version < "3.0"': [
+            'future'
+        ],
+        ':python_version < "3.2"': [
+            'subprocess32'
+        ],
+        ':python_version < "3.4"': [
+            'enum34'
+        ]
+    },
     tests_require=['pytest', 'docker-py'],
     cmdclass={'test': PyTest},
     entry_points={

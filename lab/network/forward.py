@@ -1,10 +1,13 @@
 # Adapted for our own use from
 # https://github.com/paramiko/paramiko/blob/master/demos/forward.py
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 import select
 import logging
 import socket
 import threading
-import SocketServer
+import socketserver
 import plumbum
 from . import get_new_sock
 
@@ -12,12 +15,12 @@ from . import get_new_sock
 logger = logging.getLogger(__name__)
 
 
-class ForwardServer(SocketServer.ThreadingTCPServer):
+class ForwardServer(socketserver.ThreadingTCPServer):
     daemon_threads = True
     allow_reuse_address = True
 
 
-class Handler(SocketServer.BaseRequestHandler):
+class Handler(socketserver.BaseRequestHandler):
     def handle(self):
         try:
             chan = self.remote_machine.connect_sock(self.chain_port,

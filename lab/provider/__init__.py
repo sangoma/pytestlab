@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import object
 import logging
 from ..config import load_yaml_config
 from .common import ProviderError
@@ -53,7 +55,7 @@ def get_providers(targets=None, yamlconf=None, pytestconfig=None):
     if pytestconfig and pytestconfig.option.env != 'anonymous' or targets:
         assert yamlconf, 'No config file (lab.yaml) could be found?'
         for node in yamlconf.get('providers'):
-            name, configdict = node.items()[0]
+            name, configdict = next(iter(node.items()))
             if not targets or name in targets:
                 provtype = ProviderManager.get(name)
                 if not provtype:

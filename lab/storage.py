@@ -1,3 +1,6 @@
+from builtins import str
+from builtins import next
+from builtins import object
 import pytest
 import re
 import plumbum
@@ -84,12 +87,12 @@ class StorageManager(object):
 
     @pytest.hookimpl
     def pytest_lab_process_logs(self, config, item, logs):
-        for ctl, logset in logs.iteritems():
+        for ctl, logset in logs.items():
             prefix_path = '@'.join((ctl.name, ctl.location.hostname))
             prefix_dir = self.get_storage(item).join('logs').join(prefix_path)
             prefix_dir.mkdir()
 
-            for remotefile, contents in logset.iteritems():
+            for remotefile, contents in logset.items():
                 absname = filename = str(remotefile)
 
                 # any plumbum remote path should be encoded as an

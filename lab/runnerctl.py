@@ -1,6 +1,7 @@
 """
 pytest runner control plugin
 """
+from builtins import object
 import pytest
 import string
 

@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import next
 import gc
 import socket
 import itertools

@@ -1,6 +1,9 @@
 """
 High level networking helpers
 """
+from builtins import next
+from builtins import zip
+from builtins import range
 import socket
 import pytest
 import contextlib2

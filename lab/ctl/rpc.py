@@ -1,6 +1,7 @@
 """
 RPC controls
 """
+from builtins import object
 import pytest
 from ..comms import connection
 from rpyc.utils.zerodeploy import DeployedServer

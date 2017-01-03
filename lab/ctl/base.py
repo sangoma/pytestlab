@@ -2,6 +2,7 @@
 Controller base type
 Encapsulates basic functionality including logging and DNS lookups
 """
+from builtins import object
 import weakref
 import warnings
 
