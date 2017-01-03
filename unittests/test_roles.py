@@ -23,6 +23,7 @@ def mockctl(testdir):
         def mock_factory():
             return global_mock
 
+        @pytest.hookimpl
         def pytest_lab_addroles(config, rolemanager):
             rolemanager.register('mock', global_mock)
 

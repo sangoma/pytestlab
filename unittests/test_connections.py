@@ -18,6 +18,7 @@ class MyCtl(object):
 class Plugin:
     """Plugin namespace.
     """
+    @pytest.hookimpl
     @staticmethod
     def pytest_lab_addroles(config, rolemanager):
         rolemanager.register('myctl', MyCtl)
