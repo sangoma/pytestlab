@@ -19,14 +19,13 @@ class Plugin:
     """Plugin namespace.
     """
     @pytest.hookimpl
-    @staticmethod
-    def pytest_lab_addroles(config, rolemanager):
+    def pytest_lab_addroles(self, config, rolemanager):
         rolemanager.register('myctl', MyCtl)
 
 
 @pytest.fixture(scope='session')
 def localhost(pytestconfig):
-    pytestconfig.pluginmanager.register(Plugin)
+    pytestconfig.pluginmanager.register(Plugin())
     return pytest.env.manage(
         'localhost', facts={'port': 2222, 'password': 'root'})
 
