@@ -17,6 +17,10 @@ def test_logwatch_source(testdir):
                 ('test_logwatch.txt', 'Error: This is a test error.')]
         )
 
+        # Fields necessary to make the storage plugin happy
+        mocksource.ctl.name = 'mock'
+        mocksource.ctl.location.hostname = 'localhost'
+
         @pytest.hookimpl
         def pytest_lab_log_watch(logmanager):
             logmanager.register(mocksource)
@@ -62,6 +66,7 @@ def test_reliable_logwatch(testdir, alpine_ssh):
 
         class Ctl(base.Controller):
             logwatched = False
+            name = 'mock'
 
             def pytest_lab_log_watch(self, logmanager):
                 # register for a fake log that shouldn't exist
