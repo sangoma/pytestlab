@@ -57,6 +57,7 @@ setup_params = dict(
         'pytest-instafail',
         'pytest-interactive',
         'pytest-ordering',
+        'pytest-pcap',
         'pytest-redmine',
         'python-etcd',
         'pyxdg',
@@ -73,9 +74,6 @@ setup_params = dict(
         'vegapy',
         'bravado',
     ],
-    extras_require={
-        'build': ['pycparser', 'cffi'],
-    },
     tests_require=['pytest', 'docker-py'],
     cmdclass={'test': PyTest},
     entry_points={
@@ -86,8 +84,7 @@ setup_params = dict(
             'rm=lab.app.environments:EnvUnregister',
             'facts=lab.app.facts:FactsLister',
         ]
-    },
-    cffi_modules=["trace/pcap_build.py:ffi"]
+    }
 )
 
 if __name__ == '__main__':
