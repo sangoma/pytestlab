@@ -3,7 +3,6 @@ from .model import Environment, Facts
 
 # built-in plugin loading
 pytest_plugins = (
-    'lab.storage',
     'lab.roles',
     'lab.runnerctl',
     'lab.logwatch',

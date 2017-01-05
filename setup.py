@@ -83,6 +83,9 @@ setup_params = dict(
             'add=lab.app.environments:EnvRegister',
             'rm=lab.app.environments:EnvUnregister',
             'facts=lab.app.facts:FactsLister',
+        ],
+        'pytest11': [
+            '_storage=lab.storage'
         ]
     }
 )
