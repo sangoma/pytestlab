@@ -85,6 +85,7 @@ setup_params = dict(
         ]
     },
     tests_require=['pytest', 'docker-py'],
+    setup_requires=['setuptools>=17.1'],
     cmdclass={'test': PyTest},
     entry_points={
         'console_scripts': ['labctl=lab.app.__main__:main'],
