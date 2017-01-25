@@ -34,7 +34,7 @@ class ArtifactPath(object):
     def copy(self, remote, local=None):
         if not isinstance(remote, plumbum.Path):
             remote = plumbum.local.path(remote)
-        target = self.path.join(local or remote.basename)
+        target = self.path.join(local or remote.name)
         plumbum.path.copy(remote, target)
         return target
 
@@ -54,8 +54,8 @@ class ArtifactPath(object):
         return str(self.path)
 
     @property
-    def basename(self):
-        return self.path.basename
+    def name(self):
+        return self.path.name
 
 
 class StorageManager(object):

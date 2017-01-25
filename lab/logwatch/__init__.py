@@ -76,7 +76,7 @@ class logfiles(object):
         for log in itertools.chain.from_iterable(self.iterlogs()):
             if log.stat().st_size > 0:
                 logger.debug('Captured {} for {}'.format(
-                    log.basename, self.ident
+                    log.name, self.ident
                 ))
                 yield log, log.read()
 
