@@ -96,7 +96,8 @@ setup_params = dict(
             'facts=lab.app.facts:FactsLister',
         ],
         'pytest11': [
-            '_storage=lab.storage'
+            'futurize=lab.futurize',
+            '_storage=lab.storage',
         ]
     }
 )
