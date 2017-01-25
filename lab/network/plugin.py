@@ -5,6 +5,7 @@ from builtins import next
 from builtins import zip
 from builtins import range
 import socket
+import errno
 import pytest
 import contextlib2
 from .. import network
@@ -146,11 +147,23 @@ def srv(request):
     return lookup
 
 
+def vlan_handle_error(err):
+    '''Error handler for vlan creation failure, for friendlier error
+    messages.'''
+    if err.code == errno.EINVAL:
+        pytest.skip('Primary interface does not support creating '
+                    'macvlans, are you trying to connect over a VPN?')
+    raise err
+
+
 @pytest.fixture(scope='class')
 def vlan(primary_iface):
     '''Create a macvlan device'''
-    with network.MacVLan(primary_iface) as vlan:
-        yield vlan
+    try:
+        with network.MacVLan(primary_iface) as vlan:
+            yield vlan
+    except network.NetlinkError as err:
+        vlan_handle_error(err)
 
 
 @pytest.fixture
@@ -159,8 +172,11 @@ def vlan_set(primary_iface):
 
     with contextlib2.ExitStack() as stack:
         def inner(count):
-            return [stack.enter_context(network.MacVLan(primary_iface))
-                    for _ in range(count)]
+            try:
+                return [stack.enter_context(network.MacVLan(primary_iface))
+                        for _ in range(count)]
+            except network.NetlinkError as err:
+                vlan_handle_error(err)
 
         yield inner
 

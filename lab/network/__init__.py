@@ -20,6 +20,7 @@ import plumbum
 from .ping import ping_cmds
 
 # re-exports
+from pyroute2 import NetlinkError
 from .macvlan import MacVLan
 
 
