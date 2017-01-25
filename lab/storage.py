@@ -1,8 +1,3 @@
-# vim:ts=4:sw=4:softtabstop=4:smarttab:expandtab
-#
-# Copyright (C) 2015 Sangoma Technologies Corp.
-# All Rights Reserved.
-
 import pytest
 import re
 import plumbum

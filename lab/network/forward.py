@@ -1,8 +1,5 @@
-# vim:ts=4:sw=4:softtabstop=4:smarttab:expandtab
-
 # Adapted for our own use from
 # https://github.com/paramiko/paramiko/blob/master/demos/forward.py
-
 import select
 import logging
 import socket

@@ -1,18 +1,3 @@
-# vim:ts=4:sw=4:softtabstop=4:smarttab:expandtab
-
-# Copyright (C) 2013  Sangoma Technologies Corp.
-# All Rights Reserved.
-#
-# Author(s)
-# Tyler Goodlet <tgoodlet@sangoma.com>
-# Travis Semczyszyn <tsemczyszyn@sangoma.com>
-#
-# This code is Sangoma Technologies Confidential Property.
-# Use of and access to this code is covered by a previously executed
-# non-disclosure agreement between Sangoma Technologies and the Recipient.
-# This code is being supplied for evaluation purposes only and is not to be
-# used for any other purpose.
-
 """
 This module contains the following networkng helpers:
 
