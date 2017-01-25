@@ -16,7 +16,9 @@ class Halt(object):
         self.msg = None
 
     def __call__(self, msg):
+        __tracebackhide__ = True
         self.msg = msg
+        pytest.fail(msg)
 
 
 def pytest_namespace():
