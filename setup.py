@@ -31,6 +31,7 @@ setup_params = dict(
     install_requires=[
         'beautifulsoup4',
         'bs4',
+        'cached-property',
         'cliff',
         'colorlog',
         'contextlib2',

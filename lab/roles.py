@@ -2,9 +2,9 @@ import pytest
 import logging
 import socket
 from collections import MutableMapping, OrderedDict
-import lab
-from .utils import cached_property
+from cached_property import cached_property
 from _pytest.runner import TerminalRepr
+import lab
 from .lock import ResourceLocker
 
 
