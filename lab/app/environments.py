@@ -1,3 +1,6 @@
+#
+# Copyright 2017 Sangoma Technologies Inc.
+#
 import logging
 from cliff.lister import Lister
 

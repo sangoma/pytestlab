@@ -1,3 +1,6 @@
+#
+# Copyright 2017 Sangoma Technologies Inc.
+#
 from .provider import get_providers
 from .model import Environment, Facts
 

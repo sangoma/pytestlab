@@ -1,3 +1,6 @@
+#
+# Copyright 2017 Sangoma Technologies Inc.
+#
 """
 Controller base type
 Encapsulates basic functionality including logging and DNS lookups

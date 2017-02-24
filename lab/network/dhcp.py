@@ -1,3 +1,6 @@
+#
+# Copyright 2017 Sangoma Technologies Inc.
+#
 from builtins import object
 import time
 import select

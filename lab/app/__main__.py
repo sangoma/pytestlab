@@ -1,3 +1,6 @@
+#
+# Copyright 2017 Sangoma Technologies Inc.
+#
 import sys
 from cliff.app import App
 from cliff.commandmanager import CommandManager

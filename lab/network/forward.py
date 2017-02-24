@@ -1,3 +1,6 @@
+#
+# Copyright 2017 Sangoma Technologies Inc.
+#
 # Adapted for our own use from
 # https://github.com/paramiko/paramiko/blob/master/demos/forward.py
 from future import standard_library

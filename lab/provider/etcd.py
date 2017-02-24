@@ -1,3 +1,6 @@
+#
+# Copyright 2017 Sangoma Technologies Inc.
+#
 from __future__ import absolute_import
 
 from builtins import object
