@@ -1,3 +1,14 @@
+#
+# Copyright 2017 Sangoma Technologies Inc.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Original Authors:
+#   Tyler Goodlet <tgoodlet@gmail.com>
+#   Simon Gomizelj <simon@vodik.xyz>
+#
 import setuptools
 from setuptools.command.test import test as TestCommand
 
@@ -25,64 +36,30 @@ class PyTest(TestCommand):
 
 
 setup_params = dict(
-    name='lab',
-    version='0.0.0',
+    name='pytestlab',
+    version='0.1.0.alpha',
     packages=setuptools.find_packages(),
     install_requires=[
-        'beautifulsoup4',
-        'bs4',
+        'SQLAlchemy',
         'cached-property',
         'cliff',
         'colorlog',
         'contextlib2',
-        'dnspython',
-        'python-ESL',
         'ipaddress',
-        'jenkinsapi',
-        'jinja2',
-        'libarchive',
-        'libvirt-python',
-        'lxml',
-        'matplotlib',
-        'numpy',
-        'pandas',
         'paramiko',
         'plumbum',
-        'psycopg2',
-        'pymongo',
-        'pymysql',
         'pyroute2',
-        'pysipp',
         'pytest',
-        'pytest-instafail',
-        'pytest-interactive',
-        'pytest-ordering',
-        'pytest-pcap',
-        'pytest-redmine',
         'python-etcd',
         'pyxdg',
         'pyyaml',
         'rpyc',
-        'safepy2',
-        'scipy',
-        'six',
-        'SQLAlchemy',
         'srvlookup',
-        'switchy',
-        'tftpy',
-        'vegapy',
-        'bravado',
     ],
     extras_require={
         ':python_version < "3.0"': [
             'future'
         ],
-        ':python_version < "3.2"': [
-            'subprocess32'
-        ],
-        ':python_version < "3.4"': [
-            'enum34'
-        ]
     },
     tests_require=['pytest', 'docker-py'],
     setup_requires=['setuptools>=17.1'],
@@ -98,6 +75,7 @@ setup_params = dict(
         'pytest11': [
             'futurize=lab.futurize',
             '_storage=lab.storage',
+            'pytestlab=lab',
         ]
     }
 )
