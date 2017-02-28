@@ -73,9 +73,14 @@ setup_params = dict(
             'facts=lab.app.facts:FactsLister',
         ],
         'pytest11': [
+            'lab.roles=lab.roles',
             'futurize=lab.futurize',
-            '_storage=lab.storage',
-            'pytestlab=lab',
+            'lab._storage=lab.storage',
+            'lab.logwatch=lab.logwatch',
+            'lab.log=lab.log',
+            'lab.warnreporter=lab.warnreporter',
+            'lab.network=lab.network.plugin',
+            'lab.rpyc=lab.ctl.rpc',
         ]
     }
 )
