@@ -61,7 +61,7 @@ setup_params = dict(
             'future'
         ],
     },
-    tests_require=['pytest', 'docker-py'],
+    tests_require=['pytest', 'docker'],
     setup_requires=['setuptools>=17.1'],
     cmdclass={'test': PyTest},
     entry_points={
