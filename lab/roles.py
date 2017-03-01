@@ -119,10 +119,15 @@ class Location(object):
     def _close_role(self, role):
         config = self.envmng.config
         config.hook.pytest_lab_role_destroyed(config=config, ctl=role)
-        try:
-            role.close()
-        except AttributeError:
-            pass
+        close = getattr(role, 'close', None)
+        if close:
+            self.log.debug(
+                "Calling {} for teardown".format(close))
+            close()
+        else:
+            self.log.debug(
+                "{} does not define a teardown `close()` method".format(role))
+
         pytest.env.config.pluginmanager.unregister(plugin=role)
 
     def destroy(self, role):
@@ -250,12 +255,14 @@ class EnvManager(object):
                 "Can't destroy unknown {}".format(location))
 
         logger.info("Destroying {}".format(location))
+
         # sanity
         if loc is not location:
-            logger.warn("Destroying unknown location {}".format(location))
+            logger.warning("Destroying unknown location {}".format(location))
+
+        location.cleanup()  # close all role controls @ location
         self.config.pluginmanager.hook.pytest_lab_location_destroyed(
             config=self.config, location=location)
-        location.cleanup()
         if self.locker:
             self.locker.release(loc.hostname)
 
