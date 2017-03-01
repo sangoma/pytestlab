@@ -80,6 +80,7 @@ setup_params = dict(
             'lab.log=lab.log',
             'lab.warnreporter=lab.warnreporter',
             'lab.network=lab.network.plugin',
+            'lab.runnerctl=lab.runnerctl',
             'lab.rpyc=lab.ctl.rpc',
         ]
     }
