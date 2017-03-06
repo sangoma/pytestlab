@@ -119,10 +119,12 @@ class MacVLan(object):
             self.dhcp.close()
             self.dhcp = None
 
-        if self.exists:
-            self.ipdb.interfaces[self.name].remove().commit()
-
         if self.ipdb:
+            if self.exists:
+                try:
+                    self.ipdb.interfaces[self.name].remove().commit()
+                except KeyError:
+                    pass
             self.ipdb.release()
             self.ipdb = None
 
