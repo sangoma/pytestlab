@@ -9,9 +9,12 @@ pytest runner control plugin
 """
 from builtins import object
 import string
+import signal
 import pytest
 
 
+def exit_gracefully(signum, frame):
+    raise pytest.exit('Interrupting from SIGTERM')
 
 
 class Halt(object):
@@ -26,6 +29,10 @@ class Halt(object):
 
 def pytest_namespace():
     return {'halt': Halt()}
+
+
+def pytest_configure(config):
+    signal.signal(signal.SIGTERM, exit_gracefully)
 
 
 @pytest.hookimpl(hookwrapper=True)
