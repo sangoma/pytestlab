@@ -8,14 +8,13 @@
 pytest runner control plugin
 """
 from builtins import object
-import pytest
 import string
+import signal
+import pytest
 
 
-def pytest_runtest_makereport(item, call):
-    if 'setup_test' in item.keywords and call.excinfo:
-        if not call.excinfo.errisinstance(pytest.skip.Exception):
-            pytest.halt('A setup test has failed, aborting...')
+def exit_gracefully(signum, frame):
+    raise pytest.exit('Interrupting from SIGTERM')
 
 
 class Halt(object):
@@ -32,11 +31,21 @@ def pytest_namespace():
     return {'halt': Halt()}
 
 
+def pytest_configure(config):
+    signal.signal(signal.SIGTERM, exit_gracefully)
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_protocol(item, nextitem):
     yield
     if pytest.halt.msg:
         item.session.shouldstop = pytest.halt.msg
+
+
+def pytest_runtest_makereport(item, call):
+    if 'setup_test' in item.keywords and call.excinfo:
+        if not call.excinfo.errisinstance(pytest.skip.Exception):
+            pytest.halt('A setup test has failed, aborting...')
 
 
 @pytest.fixture(scope='class')
