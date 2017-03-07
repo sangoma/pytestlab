@@ -122,9 +122,12 @@ class MacVLan(object):
         if self.ipdb:
             if self.exists:
                 try:
-                    self.ipdb.interfaces[self.name].remove().commit()
+                    iface = self.ipdb.interfaces[self.name]
+                    if iface.get('ipdb_scope') != 'create':
+                        iface.remove().commit()
                 except KeyError:
                     pass
+
             self.ipdb.release()
             self.ipdb = None
 
