@@ -31,15 +31,34 @@ class EnvLister(Lister):
 
     def get_parser(self, prog_name):
         parser = super(EnvLister, self).get_parser(prog_name)
-        parser.add_argument('name', type=str, help='environment name')
+        env_parse = parser.add_mutually_exclusive_group(required=True)
+        env_parse.add_argument('name', action='store', default=None, nargs='?',
+                               help='list facts for named environment')
+        env_parse.add_argument('--list', action='store_true', default=False,
+                               help='list all defined environment names')
         return parser
 
-    def take_action(self, parsed_args):
+    def _list_all(self):
+        names = [[name] for provider in self.app.providers
+                 for name in provider.env_names()]
+        return (('name',), names)
+
+    def _list_facts(self, parsed_args):
         entry = self.app.get_environment(parsed_args.name)
         if not entry.view:
             self.log.warn("The environment '{}' is not defined by any provider"
                           .format(entry.name))
         return get_items(self, parsed_args, entry)
+
+    def take_action(self, parsed_args):
+        if self.cmd_name == "show":
+            self.log.warn("The `show` command has been deprecated"
+                          " in favour of the `env` command")
+
+        if parsed_args.list:
+            return self._list_all()
+        else:
+            return self._list_facts(parsed_args)
 
 
 class EnvRegister(Lister):
