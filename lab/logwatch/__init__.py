@@ -42,7 +42,7 @@ class logfiles(object):
         """Iterate through all log rotation based variations of a log
         that exists. """
         def numbered_log(ctl, logdir, logname):
-            remote = get_ssh(ctl).path(logdir)
+            remote = self.ssh.path(logdir)
             remote_log = remote.join(logname)
             if not remote_log.exists():
                 return
