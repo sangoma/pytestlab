@@ -82,6 +82,7 @@ setup_params = dict(
             'lab.network=lab.network.plugin',
             'lab.runnerctl=lab.runnerctl',
             'lab.rpyc=lab.ctl.rpc',
+            'lab.api=lab.api',
         ]
     }
 )
