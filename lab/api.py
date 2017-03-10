@@ -1,15 +1,20 @@
 import pytest
 import requests
 
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
+
 
 class TestMarker(object):
     def __init__(self, config, url):
         self.url = url
         self.session = requests.session()
 
-    def get_marks(self, env, testname):
-        api_url = '{}/v1/{}/mark/{}'.format(self.url, env, testname)
-        response = self.session.get(api_url)
+    def get_marks(self, **params):
+        api_url = urljoin(self.url, '/v1/mark')
+        response = self.session.get(api_url, params=params)
         return response.json()
 
     @pytest.hookimpl(hookwrapper=True)
@@ -20,7 +25,7 @@ class TestMarker(object):
         # this is going to be unworkable for anyone outside the
         # Toronto office...
         for item in items:
-            for mark in self.get_marks(env, item.name):
+            for mark in self.get_marks(env=env, name=item.name):
                 name = mark['name']
                 args = mark.get('args', [])
                 kwargs = mark.get('kwargs', {})
