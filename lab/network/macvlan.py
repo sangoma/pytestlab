@@ -80,7 +80,7 @@ class MacVLan(object):
 
         ipaddrs = self.ipdb.interfaces[self.name].ipaddr
         for addr, prefix in ipaddrs:
-            addr = ipaddress.ip_address(addr.decode('utf-8'))
+            addr = ipaddress.ip_address(addr)
             if addr.is_link_local:
                 continue
             elif addr.version == 4:
