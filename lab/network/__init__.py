@@ -64,7 +64,7 @@ def get_addr_version(addr):
     -------
     version : Int, the IP version (4 or 6)
     '''
-    return ipaddress.ip_address(addr.decode('utf-8')).version
+    return ipaddress.ip_address(addr).version
 
 
 def check_ipaddr(dst, version=4):
@@ -76,13 +76,13 @@ def check_ipaddr(dst, version=4):
     for res in socket.getaddrinfo(dst, 0, family, socket.SOCK_STREAM, 0,
                                   socket.AI_PASSIVE | socket.AI_CANONNAME):
         family, socktype, proto, canonname, sa = res
-        addr = ipaddress.ip_address(sa[0].decode('utf-8'))
-        return addr, canonname.decode('utf-8')
+        addr = ipaddress.ip_address(sa[0])
+        return addr, canonname
 
 
 def iter_addrs(data):
     for ipaddr in data['ipaddr']:
-        yield ipaddress.ip_interface(u'{}/{}'.format(*ipaddr))
+        yield ipaddress.ip_interface('{}/{}'.format(*ipaddr))
 
 
 def ip_ifaces(version=4):
