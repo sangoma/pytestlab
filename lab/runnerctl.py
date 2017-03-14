@@ -21,6 +21,9 @@ class Halt(object):
     def __init__(self):
         self.msg = None
 
+    def shouldstop(self, msg):
+        self.msg = msg
+
     def __call__(self, msg):
         __tracebackhide__ = True
         self.msg = msg
@@ -28,7 +31,9 @@ class Halt(object):
 
 
 def pytest_namespace():
-    return {'halt': Halt()}
+    halt = Halt()
+    return {'halt': halt,
+            'shouldstop': halt.shouldstop}
 
 
 def pytest_configure(config):
@@ -45,7 +50,7 @@ def pytest_runtest_protocol(item, nextitem):
 def pytest_runtest_makereport(item, call):
     if 'setup_test' in item.keywords and call.excinfo:
         if not call.excinfo.errisinstance(pytest.skip.Exception):
-            pytest.halt('A setup test has failed, aborting...')
+            item.session.shouldstop = 'A setup test has failed, aborting...'
 
 
 @pytest.fixture(scope='class')
