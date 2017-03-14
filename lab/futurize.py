@@ -22,7 +22,7 @@ def monkey_patch_support_for_python2():
 
     def python2_compat(cls, bases=()):
         def __init__(self, address, *args, **kwargs):
-            if isinstance(address, basestring):
+            if isinstance(address, str):
                 address = address.decode('utf-8')
             return cls.__init__(self, address, *args, **kwargs)
 
