@@ -11,6 +11,7 @@ from builtins import object
 import pytest
 from ..comms import connection
 from rpyc.utils.zerodeploy import DeployedServer
+import execnet
 
 
 class RPyCCtl(object):
@@ -76,6 +77,44 @@ class RPyCCtl(object):
         return self.get_pymods([modname], venvpath=venvpath)[modname]
 
 
+class Execnet(object):
+    def __init__(self, config, location, **kwargs):
+        self.config = config
+        self.location = location
+        self.gw = self.from_location(location)
+
+    def makespec(self, location):
+        # build gw spec
+        spec = {}
+        spec['id'] = "@".join((self.__class__.__name__, location.hostname))
+        # ssh spec
+        facts = location.facts
+        user = facts.get('user', facts.get('login'))
+        sshspec = "{user}@{hostname}".format(user=user,
+                                             hostname=location.hostname)
+        keyfile = facts.get('keyfile')
+        if keyfile:
+            sshspec = "-i {} ".format(keyfile) + sshspec
+        elif facts.get('password'):
+            raise NotImplementedError("No execnet-ssh password support yet")
+        spec['ssh'] = sshspec
+        return spec
+
+    def from_location(self, location):
+        return self.from_specdict(self.makespec(location))
+
+    def from_specdict(self, spec):
+        return execnet.makegateway('//'.join(
+            "=".join((key, val)) for key, val in spec.items())
+        )
+
+    def exec(self, expr):
+        """Remote execute code at this location and return a channel instance
+        """
+        return self.gw.remote_exec(expr)
+
+
 @pytest.hookimpl
 def pytest_lab_addroles(rolemanager):
     rolemanager.register('rpyc', RPyCCtl)
+    rolemanager.register('execnet', Execnet)
