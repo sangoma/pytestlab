@@ -8,6 +8,7 @@
 RPC controls
 """
 from builtins import object
+from contextlib import contextmanager
 import pytest
 from ..comms import connection
 from rpyc.utils.zerodeploy import DeployedServer
@@ -47,9 +48,27 @@ class RPyCCtl(object):
             self._ssh2zdservers[ssh] = server
 
         conn = server.classic_connect()
+
         # need this ref otherwise the server will tear down
         conn._zero_deploy_server = server
         return conn
+
+    def from_venvpath(self, venvpath):
+        conn = self._venvs2rpycs.get(venvpath)
+        if not conn:
+            conn = self.get_rpyc(venvpath=venvpath)
+            # this adds a ref to the new rpyc conn
+            self._venvs2rpycs[venvpath] = conn
+        return conn
+
+    @contextmanager
+    def splitbrain(self, venvpath=None, conn=None):
+        from rpyc.experimental.splitbrain import (splitbrain,
+                                                  disable_splitbrain)
+        conn = conn or self.from_venvpath(venvpath)
+        with splitbrain(conn):
+            yield
+        disable_splitbrain()
 
     def get_pymods(self, modnames, venvpath=None):
         """Return a dict of ``rpyc`` proxied python modules by name.
@@ -57,13 +76,7 @@ class RPyCCtl(object):
         Any pre-existing ``rpyc`` connection for ``venvpath`` will be used.
         """
         mods = {}
-        # if venvpath is not None:
-        # this adds a ref to the new rpyc conn
-        rpyc = self._venvs2rpycs.get(venvpath)
-        if not rpyc:
-            rpyc = self.get_rpyc(venvpath=venvpath)
-            self._venvs2rpycs[venvpath] = rpyc
-
+        rpyc = self.from_venvpath(venvpath)
         for name in modnames:
             # getattr triggers an import
             mods[name] = getattr(rpyc.modules, name)
