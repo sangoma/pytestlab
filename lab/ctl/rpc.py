@@ -7,11 +7,13 @@
 """
 RPC controls
 """
+import importlib
 from builtins import object
 import pytest
 from ..comms import connection
 from rpyc.utils.zerodeploy import DeployedServer
 import execnet
+import amalgamate
 
 
 class RPyCCtl(object):
@@ -82,6 +84,7 @@ class Execnet(object):
         self.config = config
         self.location = location
         self.gw = self.from_location(location)
+        self._modsrc = {}
 
     def makespec(self, location):
         # build gw spec
@@ -89,7 +92,7 @@ class Execnet(object):
         spec['id'] = "@".join((self.__class__.__name__, location.hostname))
         # ssh spec
         facts = location.facts
-        user = facts.get('user', facts.get('login'))
+        user = facts.get('user', facts.get('login', 'root'))
         sshspec = "{user}@{hostname}".format(user=user,
                                              hostname=location.hostname)
         keyfile = facts.get('keyfile')
@@ -104,7 +107,7 @@ class Execnet(object):
         return self.from_specdict(self.makespec(location))
 
     def from_specdict(self, spec):
-        execnet.makegateway('//'.join(
+        return execnet.makegateway('//'.join(
             "{k}={v}".format(k=key, v=val) for key, val in spec.items()
         ))
 
@@ -112,6 +115,34 @@ class Execnet(object):
         """Remote execute code at this location and return a channel instance
         """
         return self.gw.remote_exec(expr)
+
+    def _get_mod_src(self, module):
+        modpath = module.__name__
+        try:
+            return self._modsrc[modpath]
+        except KeyError:
+            graph, pkg = amalgamate.graph_from_module(modpath)
+            order = amalgamate.depsort(graph)
+            src = amalgamate.amalgamate(order, graph, pkg)
+            self._modsrc[modpath] = src
+            return src
+
+    def invoke(self, func, **kwargs):
+        """Invoke a locally defined function at the remote location.
+
+        The function's containing module's source is collected and transferred
+        to the remote system and the function is invoked in that module
+        namespace.
+        """
+        modpath = func.__module__
+        module = importlib.import_module(modpath)
+        src = self._get_mod_src(module)
+        # append func call a end of module source
+        invoke_line = "channel.send({}({}))".format(
+            func.__name__, ', '.join(
+                ("{}={}".format(k, repr(v)) for k, v in kwargs.items())))
+        channel = self.gw.remote_exec(src + invoke_line)
+        return channel.receive()
 
 
 @pytest.hookimpl
