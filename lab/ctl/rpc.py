@@ -7,6 +7,8 @@
 """
 RPC controls
 """
+import inspect
+import importlib
 from builtins import object
 import pytest
 from ..comms import connection
@@ -77,11 +79,15 @@ class RPyCCtl(object):
         return self.get_pymods([modname], venvpath=venvpath)[modname]
 
 
+REMOTE_EXEC_CHECK = "if __name__ == '__channelexec__':"
+
+
 class Execnet(object):
     def __init__(self, config, location, **kwargs):
         self.config = config
         self.location = location
         self.gw = self.from_location(location)
+        self._modsrc = {}
 
     def makespec(self, location):
         # build gw spec
@@ -89,7 +95,7 @@ class Execnet(object):
         spec['id'] = "@".join((self.__class__.__name__, location.hostname))
         # ssh spec
         facts = location.facts
-        user = facts.get('user', facts.get('login'))
+        user = facts.get('user', facts.get('login', 'root'))
         sshspec = "{user}@{hostname}".format(user=user,
                                              hostname=location.hostname)
         keyfile = facts.get('keyfile')
@@ -112,6 +118,33 @@ class Execnet(object):
         """Remote execute code at this location and return a channel instance
         """
         return self.gw.remote_exec(expr)
+
+    def _get_mod_src(self, module):
+        modpath = module.__name__
+        try:
+            return self._modsrc[modpath]
+        except KeyError:
+            src = inspect.getsource(module)
+            self._modsrc[modpath] = src
+            return src
+
+    def invoke(self, func, **kwargs):
+        """Invoke a locally defined function at the remote location.
+
+        The function's containing module's source is collected and transferred
+        to the remote system and the function is invoked in that module
+        namespace.
+        """
+        modpath = func.__module__
+        module = importlib.import_module(modpath)
+        src = self._get_mod_src(module)
+        # append func call a end of module source
+        invoke_line = " "*4 + "channel.send({}({}))".format(
+            func.__name__, ', '.join(
+                ("{}={}".format(k, repr(v)) for k, v in kwargs.items())))
+        channel = self.gw.remote_exec(
+            src + REMOTE_EXEC_CHECK + invoke_line)
+        return channel.receive()
 
 
 @pytest.hookimpl
