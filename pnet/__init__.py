@@ -1,7 +1,7 @@
 import struct
 import ipaddress
 from .utils import HWAddress
-from .msg import msg, csum
+from .msg import ParseError, msg, csum
 
 
 # IEEE = 802.3 Ethernet magic constants. The frame sizes omit the

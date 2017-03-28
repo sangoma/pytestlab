@@ -3,6 +3,10 @@ from ipaddress import IPv4Address
 from .utils import HWAddress
 
 
+class ParseError(RuntimeError):
+    """Failed to unpack structure."""
+
+
 TYPES = {
     'uint8': 'B',
     'uint16': 'H',
@@ -53,7 +57,10 @@ class msg(dict):
     @classmethod
     def parse(cls, buf, offset=0):
         self = cls(buf=buf, offset=offset)
-        self._decode()
+        try:
+            self._decode()
+        except struct.error as e:
+            raise ParseError(str(e))
         return self
 
     def _register_fields(self):
