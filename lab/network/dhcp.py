@@ -49,6 +49,7 @@ def generate_packet(src, data):
                   'len': len(data) + udphdr.min_size},
                  buf=ip4.payload)
 
+    ip4['csum'] = pnet.checksum(ip4.tobytes())
     udp['csum'] = pnet.ipv4_checksum(ip4, udp, data)
     udp.payload = data
     return packet

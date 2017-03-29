@@ -24,7 +24,7 @@ TYPES = {
 }
 
 
-def csum(*data):
+def checksum(*data):
     # TODO: Use iterator to avoid copying
     data = b''.join(data)
 
@@ -86,7 +86,11 @@ class msg(dict):
             self.offset += size
 
     def _encode(self):
+        # Workaround old 2.7 versions not having buffer protocol
+        # implemented correctly on memory view... thanks CentOS 7
+        buf = bytearray(len(self.buf))
         self.offset = 0
+
         for field in self.fields:
             name, fmt = field[:2]
             default = b'\x00' if len(field) <= 2 else field[2]
@@ -96,14 +100,17 @@ class msg(dict):
             if self[name] is None:
                 # Assume we have an empty buffer
                 if not isinstance(default, bytes):
-                    struct.pack_into(fmt, self.buf, self.offset, default)
+                    struct.pack_into(fmt, buf, self.offset, default)
             else:
                 value = routine(self[name])
                 if not isinstance(value, (set, tuple, list)):
                     value = [value]
-                struct.pack_into(fmt, self.buf, self.offset, *value)
+                struct.pack_into(fmt, buf, self.offset, *value)
 
             self.offset += size
+
+        # Workaround this issue by copying from a temporary buffer
+        self.buf[:self.offset] = buf[:self.offset]
 
     def __getitem__(self, key):
         try:

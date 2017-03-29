@@ -1,7 +1,7 @@
 import struct
 import ipaddress
 from .utils import HWAddress
-from .msg import ParseError, msg, csum
+from .msg import ParseError, msg, checksum
 
 
 # IEEE = 802.3 Ethernet magic constants. The frame sizes omit the
@@ -95,7 +95,7 @@ def ipv4_checksum(ip4, udp, data):
     ip4_dst = ip4['dst']
     ip4_len = len(data) + udphdr.min_size
 
-    return csum(
+    return checksum(
         ip4_src.packed if ip4_src else b'\x00' * 4,
         ip4_dst.packed if ip4_dst else b'\x00' * 4,
         struct.pack('!HH', ip4['proto'], ip4_len),
@@ -123,12 +123,6 @@ class ip4hdr(msg):
               ('csum', 'be16'),
               ('src', 'ip4addr'),
               ('dst', 'ip4addr'))
-
-    def __getitem__(self, key):
-        # TODO: cleanup, this shouldn't be treated as special
-        if key == 'csum':
-            return csum(self.tobytes())
-        return msg.__getitem__(self, key)
 
 
 class udphdr(msg):
