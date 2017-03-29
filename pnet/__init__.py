@@ -111,6 +111,16 @@ class ethhdr(msg):
               ('type', 'be16'))
 
 
+class sllhdr(msg):
+    min_size = 16
+    fields = (('pkttype', 'be16'),
+              ('hatype', 'be16'),
+              ('halen', 'be16'),
+              ('src', 'l2addr'),
+              ('pad', 'be16'),
+              ('type', 'be16'))
+
+
 class ip4hdr(msg):
     min_size = 20
     fields = (('verlen', 'uint8', 0x45),
