@@ -11,7 +11,7 @@ import logging
 import socket
 import ipaddress
 import pyroute2
-from .dhcp import DHCP
+from .dhcp import DHCP4
 
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class MacVLan(object):
         # Start dhcp process if necessary
         if dhcp:
             try:
-                self.dhcp = DHCP(vlan)
+                self.dhcp = DHCP4(vlan)
             except RuntimeError:
                 self.close()
                 raise
