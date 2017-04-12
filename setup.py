@@ -83,6 +83,7 @@ setup_params = dict(
             'lab.runnerctl=lab.runnerctl',
             'lab.rpyc=lab.ctl.rpc',
             'lab.api=lab.api',
+            'lab.docker=lab.docker',
         ]
     }
 )
