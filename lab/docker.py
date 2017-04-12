@@ -9,6 +9,13 @@ import docker as dockerpy
 import pytest
 
 
+class DockerError(RuntimeError):
+    @classmethod
+    def fromresponse(cls, data):
+        message = data['errorDetail']['message']
+        return cls(message)
+
+
 class Docker(object):
     def __init__(self, client):
         self.client = client
@@ -19,7 +26,9 @@ class Docker(object):
         the docker pull command. """
         for status in self.client.api.pull(name, tag=tag, stream=True):
             data = json.loads(status)
-            if 'id' in data:
+            if 'error' in data:
+                raise DockerError.fromresponse(data)
+            elif 'id' in data:
                 self.log.info("{id}: {status}".format(**data))
             else:
                 self.log.info(data['status'])
