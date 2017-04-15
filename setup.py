@@ -45,6 +45,7 @@ setup_params = dict(
         'cliff',
         'colorlog',
         'contextlib2',
+        'docker',
         'ipaddress',
         'paramiko',
         'plumbum',
@@ -61,7 +62,7 @@ setup_params = dict(
             'future'
         ],
     },
-    tests_require=['pytest', 'docker'],
+    tests_require=['pytest'],
     setup_requires=['setuptools>=17.1'],
     cmdclass={'test': PyTest},
     entry_points={
