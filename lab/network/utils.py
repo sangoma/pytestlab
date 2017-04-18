@@ -2,11 +2,62 @@
 Networking utility functions.
 These should be as minimal as possible to enable remote execution.
 """
-import ipaddress
 import errno
+import logging
 import socket
 import itertools
 import contextlib
+
+try:
+    # for RPC via execnet this module may not be installed at the far end (py2)
+    import ipaddress
+
+    def resolver(host, version=4):
+        '''A simple resolver interface
+
+        Parameters
+        ----------
+        host : str, hostname to look up
+        version : int, IP version number (default: 4)
+
+        Returns
+        -------
+        ip : str, ip address of the given hostname
+        '''
+        return check_ipaddr(host, version)[0].compressed
+
+    def get_addr_version(addr):
+        '''Check the IP version of a given address
+
+        Paramaters
+        ----------
+        addr : str, IP address (version 4 or 6)
+
+        Returns
+        -------
+        version : Int, the IP version (4 or 6)
+        '''
+        return ipaddress.ip_address(addr).version
+
+    def check_ipaddr(dst, version=4):
+        '''
+        Receive a hostname or IP address string and return a validated
+        IP and fqdn if either can be found
+        '''
+        family = version_to_family(version)
+        for res in socket.getaddrinfo(dst, 0, family, socket.SOCK_STREAM, 0,
+                                      socket.AI_PASSIVE | socket.AI_CANONNAME):
+            family, socktype, proto, canonname, sa = res
+            addr = ipaddress.ip_address(sa[0])
+            return addr, canonname
+
+    def iter_addrs(data):
+        for ipaddr in data['ipaddr']:
+            yield ipaddress.ip_interface('{}/{}'.format(*ipaddr))
+
+except ImportError:
+    logging.getLogger('lab.network.utils').warning(
+        "Some network utils are not available; no `ipaddress` could be found")
 
 
 def version_to_family(version):
@@ -17,57 +68,8 @@ def version_to_family(version):
     return ValueError("Version isn't either 4 or 6")
 
 
-def resolver(host, version=4):
-    '''A simple resolver interface
-
-    Parameters
-    ----------
-    host : str, hostname to look up
-    version : int, IP version number (default: 4)
-
-    Returns
-    -------
-    ip : str, ip address of the given hostname
-    '''
-    return check_ipaddr(host, version)[0].compressed
-
-
-def get_addr_version(addr):
-    '''Check the IP version of a given address
-
-    Paramaters
-    ----------
-    addr : str, IP address (version 4 or 6)
-
-    Returns
-    -------
-    version : Int, the IP version (4 or 6)
-    '''
-    return ipaddress.ip_address(addr).version
-
-
-def check_ipaddr(dst, version=4):
-    '''
-    Receive a hostname or IP address string and return a validated
-    IP and fqdn if either can be found
-    '''
-    family = version_to_family(version)
-    for res in socket.getaddrinfo(dst, 0, family, socket.SOCK_STREAM, 0,
-                                  socket.AI_PASSIVE | socket.AI_CANONNAME):
-        family, socktype, proto, canonname, sa = res
-        addr = ipaddress.ip_address(sa[0])
-        return addr, canonname
-
-
-def iter_addrs(data):
-    for ipaddr in data['ipaddr']:
-        yield ipaddress.ip_interface('{}/{}'.format(*ipaddr))
-
-
-# FIXME: should really be get_sock_address
-def get_new_sock(host, port=0, family=None, version=None, sockmod=socket):
-    '''
-    Get and return free socket address from the system.
+def get_sock_addr(host, port=0, family=None, version=None, sockmod=socket):
+    '''Get and return free socket address from the system.
 
     Parameters
     ----------
@@ -105,6 +107,10 @@ def get_new_sock(host, port=0, family=None, version=None, sockmod=socket):
     if err is not None:
         raise err
     raise socket.error("getaddrinfo returns an empty list")
+
+
+# legacy alias
+get_new_sock = get_sock_addr
 
 
 # use a range recommended here:
