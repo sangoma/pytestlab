@@ -56,6 +56,7 @@ setup_params = dict(
         'pyyaml',
         'rpyc',
         'srvlookup',
+        'execnet',
     ],
     extras_require={
         ':python_version < "3.0"': [
@@ -82,7 +83,7 @@ setup_params = dict(
             'lab.warnreporter=lab.warnreporter',
             'lab.network=lab.network.plugin',
             'lab.runnerctl=lab.runnerctl',
-            'lab.rpyc=lab.ctl.rpc',
+            'lab.rpc=lab.ctl.rpc',
             'lab.api=lab.api',
             'lab.docker=lab.docker',
         ]
