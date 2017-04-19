@@ -70,6 +70,7 @@ setup_params = dict(
         'console_scripts': ['labctl=lab.app.__main__:main'],
         'labctl': [
             'show=lab.app.environments:EnvLister',
+            'env=lab.app.environments:EnvLister',
             'add=lab.app.environments:EnvRegister',
             'rm=lab.app.environments:EnvUnregister',
             'facts=lab.app.facts:FactsLister',

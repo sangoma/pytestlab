@@ -60,3 +60,8 @@ class PostgresqlProvider(object):
 
     def get(self, *path, **kwargs):
         return Record(self.session, *path)
+
+    def env_names(self):
+        records = self.session.query(JSONRecord)
+        env_records = records.filter(JSONRecord.path.like("environment%"))
+        return [r.path.partition("/")[2] for r in env_records.all()]
