@@ -127,7 +127,7 @@ class Execnet(object):
             "=".join((key, val)) for key, val in spec.items())
         )
 
-    def exec(self, expr):
+    def remote_exec(self, expr):
         """Remote execute code at this location and return a channel instance
         """
         return self.gw.remote_exec(expr)
