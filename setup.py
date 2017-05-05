@@ -67,25 +67,17 @@ setup_params = dict(
     setup_requires=['setuptools>=17.1'],
     cmdclass={'test': PyTest},
     entry_points={
-        'console_scripts': ['labctl=lab.app.__main__:main'],
-        'labctl': [
-            'show=lab.app.environments:EnvLister',
-            'env=lab.app.environments:EnvLister',
-            'add=lab.app.environments:EnvRegister',
-            'rm=lab.app.environments:EnvUnregister',
-            'facts=lab.app.facts:FactsLister',
-        ],
         'pytest11': [
-            'lab.roles=lab.roles',
-            'futurize=lab.futurize',
-            'lab._storage=lab.storage',
-            'lab.logwatch=lab.logwatch',
-            'lab.log=lab.log',
-            'lab.network=lab.network.plugin',
-            'lab.runnerctl=lab.runnerctl',
-            'lab.rpc=lab.ctl.rpc',
-            'lab.api=lab.api',
-            'lab.docker=lab.docker',
+            'roles=plugins.roles',
+            'futurize=plugins.futurize',
+            '_storage=plugins.storage',
+            'logwatch=plugins.logwatch',
+            'log=plugins.log',
+            'network=plugins.network',
+            'runnerctl=plugins.runnerctl',
+            'rpc=plugins.rpc',
+            'api=plugins.api',
+            'docker=plugins.docker',
         ]
     }
 )

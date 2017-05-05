@@ -7,6 +7,16 @@
 import pytest
 
 
+@pytest.hookspec(firstresult=True)
+def pytest_lab_load_role(config, identifier, facts):
+    pass
+
+
+@pytest.hookspec(firstresult=True)
+def pytest_lab_dispatch(config, identifier):
+    pass
+
+
 @pytest.hookspec
 def pytest_lab_configure(envmanager):
     """pytestlab startup"""

@@ -14,7 +14,7 @@ import socket
 import errno
 import pytest
 import contextlib2
-from .. import network
+from lab import network
 
 
 def calculate_addr_family(config):
@@ -22,11 +22,8 @@ def calculate_addr_family(config):
     has_ipv4 = has_ipv6 = False
 
     try:
-        dut = pytest.env.find_one('nsc')
-    except pytest.EquipmentLookupError:
-        pytest.log.warn(
-            "All DUTs other then NSC are currently restricted to ipv4"
-        )
+        dut = pytest.roles['nsc']
+    except KeyError:
         has_ipv4 = True
     else:
         addrinfo = dut.addrinfo  # DNS lookup

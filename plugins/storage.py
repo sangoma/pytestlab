@@ -12,7 +12,7 @@ import re
 import plumbum
 import py
 import itertools
-from .utils import encode_path
+from lab.utils import encode_path
 
 
 def sanitized_name(name):
