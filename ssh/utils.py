@@ -23,7 +23,7 @@ def make_key(args, kwds, kwd_mark=(object(),),
     key = args
     if kwds:
         key += kwd_mark
-        for item in kwds.iteritems():
+        for item in kwds.items():
             key += item
     if len(key) == 1 and type(key[0]) in fasttypes:
         return key[0]

@@ -98,12 +98,12 @@ def _parse_common(yaml, domain=None):
 
 
 def _parse_zones(config):
-    for name, yaml in config.iteritems():
+    for name, yaml in config.items():
         name_is_domain = len(name.split('.')) > 1
         domain = name if name_is_domain else None
         yield name, _parse_common(yaml, domain)
 
 
 def _parse_environments(config):
-    for name, yaml in config.iteritems():
+    for name, yaml in config.items():
         yield name, _parse_common(yaml)
