@@ -29,7 +29,14 @@ class Roles(object):
         self.data = config_v1.Union(config, zone=zone)
 
     def __getitem__(self, key):
-        assert self.data
+        if not self.data:
+            self.config.hook.pytest_lab_map.call_historic(
+                kwargs=dict(config=self.config, roles=self)
+            )
+
+        if not self.data:
+            raise KeyError(key)
+
         role = self.loaded.get(key)
         if not role:
             roledata = next(self.data[key].itervalues())
@@ -75,6 +82,11 @@ def pytest_load_initial_conftests(early_config, parser, args):
 
 @pytest.hookimpl
 def pytest_configure(config):
+    pytest.dispatch.config = config
+    pytest.roles.config = config
+
+
+def pytest_lab_map(config, roles):
     labconfig = pytest.data.find('lab2.yaml')
     if not labconfig:
         return
@@ -86,13 +98,10 @@ def pytest_configure(config):
     environment = environments[envname]
     zone = zones[zonename or 'qa.sangoma.local']
 
-    pytest.dispatch.config = config
-    pytest.roles.config = config
-    pytest.roles.load(
+    roles.load(
         environment.get('roles', {}),
         zone.get('roles')
     )
-
 
 
 @pytest.hookimpl

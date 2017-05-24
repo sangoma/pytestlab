@@ -7,6 +7,11 @@
 import pytest
 
 
+@pytest.hookspec(historic=True)
+def pytest_lab_map(config, roles):
+    pass
+
+
 @pytest.hookspec(firstresult=True)
 def pytest_lab_load_role(config, identifier, facts):
     pass
