@@ -41,7 +41,12 @@ class Roles(object):
         if not role:
             roledata = next(self.data[key].itervalues())
             role = self.config.hook.pytest_lab_load_role(config=self.config, identifier=roledata.key, facts=roledata.kwargs)
+            role.name = key  # XXX: backwards compatability hack
             self.loaded[key] = role
+
+            self.config.hook.pytest_lab_role_created.call_historic(
+                kwargs=dict(config=self.config, name=key, role=role)
+            )
         return role
 
     def __delitem__(self, key):

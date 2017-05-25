@@ -57,10 +57,10 @@ class LogManager(object):
             config=self.config, item=item, logs=self.recovered_logs)
 
     @pytest.hookimpl(trylast=True)
-    def pytest_lab_role_destroyed(self, config, ctl):
-        sources = self.sources.pop(ctl, None)
+    def pytest_lab_role_destroyed(self, config, role):
+        sources = self.sources.pop(role, None)
         if sources:
-            self._capture_logs(ctl, sources)
+            self._capture_logs(role, sources)
 
 
 @pytest.hookimpl(trylast=True)
