@@ -81,7 +81,6 @@ setup_params = dict(
             'lab._storage=lab.storage',
             'lab.logwatch=lab.logwatch',
             'lab.log=lab.log',
-            'lab.warnreporter=lab.warnreporter',
             'lab.network=lab.network.plugin',
             'lab.runnerctl=lab.runnerctl',
             'lab.rpc=lab.ctl.rpc',
