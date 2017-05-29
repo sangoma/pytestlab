@@ -100,12 +100,18 @@ def pytest_lab_map(config, roles):
     envname = config.getoption('--env')
     zonename = config.getoption('--zone')
 
-    environment = environments[envname]
-    zone = zones[zonename or 'qa.sangoma.local']
+    environment = environments.get(envname, {})
+
+    if not zonename:
+        env_zones = environment.get('zones')
+        if env_zones:
+            zonename = env_zones[0]
+
+    zone = zones.get(zonename, {})
 
     roles.load(
         environment.get('roles', {}),
-        zone.get('roles')
+        zone.get('roles', {})
     )
 
 

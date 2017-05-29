@@ -22,6 +22,11 @@ def pytest_lab_dispatch(config, identifier):
     pass
 
 
+@pytest.hookspec(firstresult=True)
+def pytest_lab_lock(config, identifier):
+    pass
+
+
 @pytest.hookspec
 def pytest_lab_configure(envmanager):
     """pytestlab startup"""

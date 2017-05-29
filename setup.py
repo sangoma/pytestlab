@@ -53,7 +53,6 @@ setup_params = dict(
         'python-etcd',
         'pyyaml',
         'rpyc',
-        'srvlookup',
         'execnet',
     ],
     extras_require={
@@ -76,6 +75,7 @@ setup_params = dict(
             'rpc=plugins.rpc',
             'api=plugins.api',
             'docker=plugins.docker',
+            'locker=plugins.locker',
         ]
     }
 )

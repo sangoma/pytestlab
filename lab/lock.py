@@ -29,12 +29,6 @@ class TooManyLocks(Exception):
     """This resource has already been locked by the current test session."""
 
 
-def find_etcd_server(domain):
-    assert domain, '--discovery-srv flag needs to be set'
-    records = srvlookup.lookup('etcd-server', domain=domain)
-    return etcd.Client(host=records[0].host, port=2379)
-
-
 def get_lock_id(user=None):
     return '{}@{}'.format(user or os.environ.get("USER", "anonymous"), socket.getfqdn())
 
