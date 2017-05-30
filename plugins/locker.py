@@ -177,10 +177,8 @@ class Locker(object):
 
     def release_all(self):
         self._stop.set()
-        print("WAITING")
-        if self._thread and self._thread.is_alive():
-            self._thread.join()
-        print("JOINED")
+        for key in list(self.locker.locks):
+            self.locker.release(key)
 
     def _keepalive(self):
         logger.debug("Starting keep-alive thread...")
@@ -189,9 +187,6 @@ class Locker(object):
                 logger.debug(
                     "Relocking {}:{}".format(key, lockid))
                 self.locker.etcd.write(key, lockid, ttl=self.ttl)
-
-        for key in list(self.locker.locks):
-            self.locker.release(key)
 
 
 @pytest.hookimpl
