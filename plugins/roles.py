@@ -122,6 +122,7 @@ def pytest_lab_load_role(config, identifier, facts):
     try:
         module = importlib.import_module(modulepath)
         pytest.log.info('Loading {}'.format(identifier))
+        config.hook.pytest_lab_lock(config=config, identifier=identifier)
         return getattr(module, factory)(**facts)
     except ImportError:
         pass
