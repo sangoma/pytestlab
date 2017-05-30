@@ -92,7 +92,7 @@ class EtcdLocker(object):
         self.locks = dict()
 
     def _makekey(self, name):
-        return name if name in self.locks else posixpath.join('lab', 'locks', name)
+        return posixpath.join('lab', 'locks', name)
 
     def read(self, key):
         try:
@@ -164,7 +164,7 @@ class Locker(object):
         # acquire
         lockid = get_lock_id(user)
         logger.info("{} is acquiring lock for {}".format(lockid, name))
-        self.locker.etcd.write(key, lockid, self.ttl)
+        self.locker.etcd.write(key, lockid, self.ttl, prevExists=False)
         logger.debug("Locked {}:{}".format(key, lockid))
 
         # start keep-alive
@@ -186,7 +186,7 @@ class Locker(object):
             for key, lockid in list(self.locker.locks.items()):
                 logger.debug(
                     "Relocking {}:{}".format(key, lockid))
-                self.locker.etcd.write(key, lockid, ttl=self.ttl)
+                self.locker.etcd.write(key, lockid, refresh=True)
 
 
 @pytest.hookimpl
