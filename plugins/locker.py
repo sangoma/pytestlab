@@ -197,24 +197,17 @@ class Locker(object):
                     "Relocking {}:{}".format(key, lockid))
                 self.locker.etcd.write(key, lockid, ttl=self.ttl, refresh=True)
 
+    @pytest.hookimpl
+    def pytest_unconfigure(self, config):
+        self.release_all()
 
-@pytest.hookimpl
-def pytest_namespace():
-    etcd = EtcdLocker('qa.sangoma.local')
-    return {'locker': Locker(etcd)}
+    @pytest.hookimpl
+    def pytest_lab_lock(self, config, identifier):
+        pytest.log.info("ATTEMPTING TO LOCK {}".format(identifier))
+        self.lock(identifier)
 
 
 @pytest.hookimpl
 def pytest_configure(config):
-    pytest.locker.config = config
-
-
-@pytest.hookimpl
-def pytest_unconfigure(config):
-    pytest.locker.release_all()
-
-
-@pytest.hookimpl
-def pytest_lab_lock(config, identifier):
-    pytest.log.info("ATTEMPTING TO LOCK {}".format(identifier))
-    pytest.locker.lock(identifier)
+    etcd = EtcdLocker('qa.sangoma.local')
+    config.pluginmanager.register(Locker(etcd))
