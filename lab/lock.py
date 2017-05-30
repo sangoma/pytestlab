@@ -20,15 +20,6 @@ from collections import OrderedDict
 logger = logging.getLogger('pytestlab')
 
 
-class ResourceLocked(Exception):
-    """Attempt to lock a resource already locked by an external test session.
-    """
-
-
-class TooManyLocks(Exception):
-    """This resource has already been locked by the current test session."""
-
-
 def get_lock_id(user=None):
     return '{}@{}'.format(user or os.environ.get("USER", "anonymous"), socket.getfqdn())
 

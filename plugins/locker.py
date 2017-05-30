@@ -15,6 +15,15 @@ SRV = namedtuple('SRV', ['host', 'port', 'priority', 'weight'])
 logger = logging.getLogger(__name__)
 
 
+class ResourceLocked(Exception):
+    """Attempt to lock a resource already locked by an external test session.
+    """
+
+
+class TooManyLocks(Exception):
+    """This resource has already been locked by the current test session."""
+
+
 class SRVQueryFailure(Exception):
     """Exception that is raised when the DNS query has failed."""
     def __str__(self):
@@ -131,7 +140,7 @@ class Locker(object):
         self._stop = threading.Event()
         self._thread = None
 
-    def lock(self, name, user=None, timeout=None):
+    def lock(self, name, user=None):
         """Acquire a resource lock for this test session by ``name``.
         If ``timeout`` is None, wait up to one ttl period before erroring.
         """
@@ -146,12 +155,12 @@ class Locker(object):
         # check if in use
         msg = self.locker.read(key)
 
-        if msg:
-            timeout = timeout if timeout is not None else msg.ttl + 1
+        if msg and msg.ttl:
+            print("MESSAGE TTL={}".format(msg.ttl))
             logger.error('{} is locked by {}, waiting {} seconds for lock '
-                         'to expire...'.format(name, msg.value, timeout))
+                         'to expire...'.format(name, msg.value, msg.ttl + 1))
             start = time.time()
-            while time.time() - start < timeout:
+            while time.time() - start < msg.ttl + 1:
                 msg = self.locker.read(key)
                 if not msg:
                     break
@@ -164,7 +173,7 @@ class Locker(object):
         # acquire
         lockid = get_lock_id(user)
         logger.info("{} is acquiring lock for {}".format(lockid, name))
-        self.locker.etcd.write(key, lockid, self.ttl, prevExists=False)
+        self.locker.etcd.write(key, lockid, ttl=self.ttl, prevExists=False)
         logger.debug("Locked {}:{}".format(key, lockid))
 
         # start keep-alive
@@ -186,7 +195,7 @@ class Locker(object):
             for key, lockid in list(self.locker.locks.items()):
                 logger.debug(
                     "Relocking {}:{}".format(key, lockid))
-                self.locker.etcd.write(key, lockid, refresh=True)
+                self.locker.etcd.write(key, lockid, ttl=self.ttl, refresh=True)
 
 
 @pytest.hookimpl
