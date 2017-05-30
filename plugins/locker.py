@@ -131,6 +131,11 @@ class Locker(object):
         self.config = config
         self.locker = EtcdLocker('qa.sangoma.local')
 
+        self.ttl = 30  # XXX: FIX
+
+        self._stop = threading.Event()
+        self._thread = None
+
     def lock(self, name, user=None, timeout=None):
         """Acquire a resource lock for this test session by ``name``.
         If ``timeout`` is None, wait up to one ttl period before erroring.
@@ -164,7 +169,7 @@ class Locker(object):
         # acquire
         lockid = get_lock_id(user)
         logger.info("{} is acquiring lock for {}".format(lockid, name))
-        self.locker.etcd.write(key, lockid, ttl=180)  # self.ttl?
+        self.locker.etcd.write(key, lockid, self.ttl)
         logger.debug("Locked {}:{}".format(key, lockid))
 
         # start keep-alive
@@ -172,8 +177,19 @@ class Locker(object):
             self._thread = threading.Thread(target=self._keepalive)
             self._thread.start()
 
-        self.locks[key] = lockid
+        self.locker.locks[key] = lockid
         return key, lockid
+
+    def _keepalive(self):
+        logger.debug("Starting keep-alive thread...")
+        while not self._stop.wait(self.ttl // 2):
+            for key, lockid in list(self.locks.items()):
+                logger.debug(
+                    "Relocking {}:{} for {}".format(key, lockid, self.env))
+                self.etcd.write(key, lockid, ttl=self.ttl)
+
+        for key in self.locks:
+            self.release(key)
 
 
 @pytest.hookimpl
