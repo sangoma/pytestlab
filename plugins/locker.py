@@ -95,34 +95,45 @@ def connect_to_etcd(discovery_srv):
     raise RuntimeError("What happened?")
 
 
+def _makekey(name):
+    return posixpath.join('lab', 'locks', name)
+
+
+class Lock(object):
+    def __init__(self, key, **kwargs):
+        self.key = _makekey(key)
+        self.data = kwargs
+
+
 class EtcdLocker(object):
     def __init__(self, discovery_srv):
         self.etcd = connect_to_etcd(discovery_srv)
-        self.locks = dict()
-
-    def _makekey(self, name):
-        return posixpath.join('lab', 'locks', name)
+        self.locks = {}
 
     def read(self, key):
         try:
-            return self.etcd.read(key)
+            return self.etcd.read(_makekey(key))
         except etcd.EtcdKeyNotFound:
             return None
 
-    def release(self, name):
-        key = self._makekey(name) if name not in self.locks else name
-        lockid = self.locks.pop(key, None)
-        # only release a lock if we own it
-        if lockid:
-            logger.info("{} is releasing lock for {}".format(lockid, name))
-            try:
-                self.etcd.delete(key)
-            except etcd.EtcdKeyNotFound:
-                pass
+    def write(self, key, lock, ttl):
+        lock = Lock(key, locker=lock)
+        self.etcd.write(lock.key, lock.data, ttl=ttl, prevexists=False)
+        self.locks[key] = lock
+
+    def refresh(self, key, ttl):
+        lock = self.locks[key]
+        self.etcd.write(lock.key, lock.data, ttl=ttl, refresh=True)
+
+    def release(self, key):
+        lock = self.locks.pop(key)
+        try:
+            self.etcd.delete(lock.key)
+        except etcd.EtcdKeyNotFound:
+            pass
 
     def test(self, name):
-        return self._makekey(name) in self.locks
-
+        return _makekey(name) in self.locks
 
 
 def get_lock_id(user=None):
@@ -131,49 +142,36 @@ def get_lock_id(user=None):
 
 
 class Locker(object):
-    def __init__(self, config):
+    def __init__(self, config, backend):
         self.config = config
-        self.locker = EtcdLocker('qa.sangoma.local')
+        self.backend = backend
 
         self.ttl = 30  # XXX: FIX
 
         self._stop = threading.Event()
         self._thread = None
 
-    def lock(self, name, user=None):
-        """Acquire a resource lock for this test session by ``name``.
-        If ``timeout`` is None, wait up to one ttl period before erroring.
-        """
-        key = self.locker._makekey(name)
+    def aquire(self, key, user=None):
+        record = self.backend.read(key)
 
-        # no re-entry allowed
-        if key in self.locker.locks:
-            raise TooManyLocks(
-                "{} has already been locked by this test session".format(
-                    name))
-
-        # check if in use
-        msg = self.locker.read(key)
-
-        if msg and msg.ttl:
-            print("MESSAGE TTL={}".format(msg.ttl))
+        if record and record.ttl:
+            print("MESSAGE TTL={}".format(record.ttl))
             logger.error('{} is locked by {}, waiting {} seconds for lock '
-                         'to expire...'.format(name, msg.value, msg.ttl + 1))
+                         'to expire...'.format(key, record.value, record.ttl + 1))
             start = time.time()
-            while time.time() - start < msg.ttl + 1:
-                msg = self.locker.read(key)
-                if not msg:
+            while time.time() - start < record.ttl + 1:
+                record = self.backend.read(key)
+                if not record:
                     break
                 time.sleep(0.5)
-
-        if msg:
+        elif record:
             raise ResourceLocked(
-                '{} is currently locked by {}'.format(name, msg.value))
+                '{} is currently locked by {}'.format(key, record.value))
 
         # acquire
         lockid = get_lock_id(user)
-        logger.info("{} is acquiring lock for {}".format(lockid, name))
-        self.locker.etcd.write(key, lockid, ttl=self.ttl, prevExists=False)
+        logger.info("{} is acquiring lock for {}".format(lockid, key))
+        self.backend.write(key, lockid, self.ttl)
         logger.debug("Locked {}:{}".format(key, lockid))
 
         # start keep-alive
@@ -181,21 +179,19 @@ class Locker(object):
             self._thread = threading.Thread(target=self._keepalive)
             self._thread.start()
 
-        self.locker.locks[key] = lockid
         return key, lockid
 
     def release_all(self):
         self._stop.set()
-        for key in list(self.locker.locks):
-            self.locker.release(key)
+        for key in list(self.backend.locks):
+            self.backend.release(key)
 
     def _keepalive(self):
-        logger.debug("Starting keep-alive thread...")
+        logger.critical("Starting keep-alive thread...")
         while not self._stop.wait(self.ttl // 2):
-            for key, lockid in list(self.locker.locks.items()):
-                logger.debug(
-                    "Relocking {}:{}".format(key, lockid))
-                self.locker.etcd.write(key, lockid, ttl=self.ttl, refresh=True)
+            for key in list(self.backend.locks):
+                logger.warning("Relocking {}".format(key))
+                self.backend.refresh(key, self.ttl)
 
     @pytest.hookimpl
     def pytest_unconfigure(self, config):
@@ -204,10 +200,11 @@ class Locker(object):
     @pytest.hookimpl
     def pytest_lab_lock(self, config, identifier):
         pytest.log.info("ATTEMPTING TO LOCK {}".format(identifier))
-        self.lock(identifier)
+        self.aquire(identifier)
+        return True
 
 
 @pytest.hookimpl
 def pytest_configure(config):
     etcd = EtcdLocker('qa.sangoma.local')
-    config.pluginmanager.register(Locker(etcd))
+    config.pluginmanager.register(Locker(config, etcd))
