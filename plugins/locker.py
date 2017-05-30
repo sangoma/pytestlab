@@ -111,11 +111,6 @@ class EtcdLocker(object):
             except etcd.EtcdKeyNotFound:
                 pass
 
-    def release_all(self):
-        self._stop.set()
-        if self._thread and self._thread.is_alive():
-            self._thread.join()
-
     def test(self, name):
         return self._makekey(name) in self.locks
 
@@ -180,16 +175,23 @@ class Locker(object):
         self.locker.locks[key] = lockid
         return key, lockid
 
+    def release_all(self):
+        self._stop.set()
+        print("WAITING")
+        if self._thread and self._thread.is_alive():
+            self._thread.join()
+        print("JOINED")
+
     def _keepalive(self):
         logger.debug("Starting keep-alive thread...")
         while not self._stop.wait(self.ttl // 2):
-            for key, lockid in list(self.locks.items()):
+            for key, lockid in list(self.locker.locks.items()):
                 logger.debug(
-                    "Relocking {}:{} for {}".format(key, lockid, self.env))
-                self.etcd.write(key, lockid, ttl=self.ttl)
+                    "Relocking {}:{}".format(key, lockid))
+                self.locker.etcd.write(key, lockid, ttl=self.ttl)
 
-        for key in self.locks:
-            self.release(key)
+        for key in list(self.locker.locks):
+            self.locker.release(key)
 
 
 @pytest.hookimpl
@@ -201,6 +203,11 @@ def pytest_namespace():
 @pytest.hookimpl
 def pytest_configure(config):
     pytest.locker.config = config
+
+
+@pytest.hookimpl
+def pytest_unconfigure(config):
+    pytest.locker.release_all()
 
 
 @pytest.hookimpl
