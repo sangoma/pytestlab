@@ -44,13 +44,6 @@ class Roles(object):
             role.name = key  # XXX: backwards compatability hack
             self.loaded[key] = role
 
-            # Use __lock__ attribute on the role to mark if it should
-            # be locked or not
-            __lock__ = getattr(role, '__lock__', None)
-            if __lock__:
-                identifier = __lock__()
-                self.config.hook.pytest_lab_aquire_lock(config=self.config, identifier=identifier)
-
             self.config.hook.pytest_lab_role_created.call_historic(
                 kwargs=dict(config=self.config, name=key, role=role)
             )
@@ -128,10 +121,21 @@ def pytest_lab_load_role(config, identifier, facts):
 
     try:
         module = importlib.import_module(modulepath)
-        pytest.log.info('Loading {}'.format(identifier))
-        return getattr(module, factory)(**facts)
     except ImportError:
-        pass
+        return
+
+    __virtual__ = getattr(module, '__virtual__', None)
+    if __virtual__:
+        __virtual__()
+
+    __lock__ = getattr(module, '__lock__', None)
+    if __lock__:
+        lock_identifier = __lock__(**facts)
+        config.hook.pytest_lab_aquire_lock(config=config, identifier=lock_identifier)
+
+
+    pytest.log.info('Loading {}'.format(identifier))
+    return getattr(module, factory)(**facts)
 
 
 @pytest.hookimpl
