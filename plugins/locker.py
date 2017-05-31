@@ -23,34 +23,17 @@ class ResourceLocked(Exception):
 class SRVQueryFailure(Exception):
     """Exception that is raised when the DNS query has failed."""
     def __str__(self):
-        return 'SRV query failure: %s' % self.args[0]
+        return 'SRV query failure: {}'.format(self.args[0])
 
 
-def _build_resource_to_address_map(answer):
-    """Return a dictionary that maps resource name to address.
-    The response from any DNS query is a list of answer records and
-    a list of additional records that may be useful.  In the case of
-    SRV queries, the answer section contains SRV records which contain
-    the service weighting information and a DNS resource name which
-    requires further resolution.  The additional records segment may
-    contain A records for the resources.  This function collects them
-    into a dictionary that maps resource name to an array of addresses.
-    :rtype: dict
-    """
-    mapping = defaultdict(list)
+def build_result_set(answer):
+    resource_map = defaultdict(list)
     for resource in answer.response.additional:
         target = resource.name.to_text()
         mapping[target].extend(record.address
                                for record in resource.items
                                if record.rdtype == rdatatype.A)
-    return mapping
 
-
-def _build_result_set(answer):
-    """Return a list of SRV instances for a DNS answer.
-    :rtype: list of srvlookup.SRV
-    """
-    resource_map = _build_resource_to_address_map(answer)
     for resource in answer:
         target = resource.target.to_text()
         if target in resource_map:
@@ -74,11 +57,11 @@ def query_etcd_server(discovery_srv):
             resolver.NXDOMAIN) as error:
         raise SRVQueryFailure(error.__class__.__name__)
 
-    results = _build_result_set(answer)
-    return sorted(results, key=lambda r: (r.priority, -r.weight, r.host))
+    return sorted(build_result_set(answer),
+                  key=lambda r: (r.priority, -r.weight, r.host))
 
 
-def connect_to_etcd(discovery_srv):
+def find_etcd(discovery_srv):
     err = None
     for record in query_etcd_server(discovery_srv):
         try:
@@ -91,25 +74,30 @@ def connect_to_etcd(discovery_srv):
     raise RuntimeError("What happened?")
 
 
-def _makekey(name):
+def makekey(name):
     return posixpath.join('lab', 'locks', name)
+
+
+def get_lock_id(user=None):
+    return '@'.join((user or os.environ.get("USER", "anonymous"),
+                     socket.getfqdn()))
 
 
 class EtcdLocker(object):
     Lock = namedtuple('Lock', 'key,data,ttl')
 
     def __init__(self, discovery_srv):
-        self.etcd = connect_to_etcd(discovery_srv)
+        self.etcd = find_etcd(discovery_srv)
         self.locks = {}
 
     def read(self, key):
         try:
-            return self.etcd.read(_makekey(key))
+            return self.etcd.read(makekey(key))
         except etcd.EtcdKeyNotFound:
             return None
 
     def write(self, key, ttl, **data):
-        lock = self.Lock(_makekey(key), data, ttl)
+        lock = self.Lock(makekey(key), data, ttl)
 
         self.etcd.write(lock.key, lock.data, ttl=lock.ttl, prevexists=False)
         self.locks[key] = lock
@@ -124,14 +112,6 @@ class EtcdLocker(object):
             self.etcd.delete(lock.key)
         except etcd.EtcdKeyNotFound:
             pass
-
-    def test(self, name):
-        return _makekey(name) in self.locks
-
-
-def get_lock_id(user=None):
-    return '@'.join((user or os.environ.get("USER", "anonymous"),
-                     socket.getfqdn()))
 
 
 class Locker(object):
