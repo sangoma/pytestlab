@@ -30,9 +30,9 @@ def build_result_set(answer):
     resource_map = defaultdict(list)
     for resource in answer.response.additional:
         target = resource.name.to_text()
-        mapping[target].extend(record.address
-                               for record in resource.items
-                               if record.rdtype == rdatatype.A)
+        resource_map[target].extend(record.address
+                                    for record in resource.items
+                                    if record.rdtype == rdatatype.A)
 
     for resource in answer:
         target = resource.target.to_text()
