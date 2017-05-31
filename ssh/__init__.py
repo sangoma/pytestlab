@@ -1,5 +1,5 @@
-from utils import weakref_cache
 from lab.ssh import get_ssh, get_sftp
+from .utils import weakref_cache
 
 
 @weakref_cache
