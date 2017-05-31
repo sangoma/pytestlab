@@ -109,8 +109,10 @@ class EtcdLocker(object):
             return None
 
     def write(self, key, ttl, **data):
-        self.etcd.write(key, data, ttl=ttl, prevexists=False)
-        self.locks[key] = self.Lock(key, data, ttl)
+        lock = self.Lock(_makekey(key), data, ttl)
+
+        self.etcd.write(lock.key, lock.data, ttl=lock.ttl, prevexists=False)
+        self.locks[key] = lock
 
     def refresh(self, key):
         lock = self.locks[key]
