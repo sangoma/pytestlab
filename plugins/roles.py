@@ -41,7 +41,12 @@ class Roles(object):
         if not role:
             roledata = next(self.data[key].itervalues())
             role = self.config.hook.pytest_lab_load_role(config=self.config, identifier=roledata.key, facts=roledata.kwargs)
+            role.name = key  # XXX: backwards compatability hack
             self.loaded[key] = role
+
+            self.config.hook.pytest_lab_role_created.call_historic(
+                kwargs=dict(config=self.config, name=key, role=role)
+            )
         return role
 
     def __delitem__(self, key):
@@ -87,7 +92,7 @@ def pytest_configure(config):
 
 
 def pytest_lab_map(config, roles):
-    labconfig = pytest.data.find('lab2.yaml')
+    labconfig = pytest.data.find('map.yaml')
     if not labconfig:
         return
 
@@ -95,12 +100,18 @@ def pytest_lab_map(config, roles):
     envname = config.getoption('--env')
     zonename = config.getoption('--zone')
 
-    environment = environments[envname]
-    zone = zones[zonename or 'qa.sangoma.local']
+    environment = environments.get(envname, {})
+
+    if not zonename:
+        env_zones = environment.get('zones')
+        if env_zones:
+            zonename = env_zones[0]
+
+    zone = zones.get(zonename, {})
 
     roles.load(
         environment.get('roles', {}),
-        zone.get('roles')
+        zone.get('roles', {})
     )
 
 
@@ -110,10 +121,21 @@ def pytest_lab_load_role(config, identifier, facts):
 
     try:
         module = importlib.import_module(modulepath)
-        pytest.log.info('Loading {}'.format(identifier))
-        return getattr(module, factory)(**facts)
     except ImportError:
-        pass
+        return
+
+    __virtual__ = getattr(module, '__virtual__', None)
+    if __virtual__:
+        __virtual__()
+
+    __lock__ = getattr(module, '__lock__', None)
+    if __lock__:
+        lock_identifier = __lock__(factory, **facts)
+        config.hook.pytest_lab_aquire_lock(config=config, identifier=lock_identifier)
+
+
+    pytest.log.info('Loading {}'.format(identifier))
+    return getattr(module, factory)(**facts)
 
 
 @pytest.hookimpl

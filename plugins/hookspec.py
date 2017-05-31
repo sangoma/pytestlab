@@ -22,6 +22,14 @@ def pytest_lab_dispatch(config, identifier):
     pass
 
 
+def pytest_lab_aquire_lock(config, identifier):
+    pass
+
+
+def pytest_lab_release_lock(config, identifier):
+    pass
+
+
 @pytest.hookspec
 def pytest_lab_configure(envmanager):
     """pytestlab startup"""
@@ -38,14 +46,14 @@ def pytest_lab_addroles(config, rolemanager):
 # canonical list of roles should talk directly to the role manager
 # instead.
 @pytest.hookspec(historic=True)
-def pytest_lab_role_created(config, ctl):
+def pytest_lab_role_created(config, name, role):
     """Called when a new role controller is created (and loaded) at a
     location.
     """
 
 
 @pytest.hookspec
-def pytest_lab_role_destroyed(config, ctl):
+def pytest_lab_role_destroyed(config, role):
     """Called when a role controller is destroyed.
     """
 

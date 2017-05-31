@@ -86,6 +86,10 @@ def _parse_common(yaml, domain=None):
     if lock:
         data['lock'] = lock
 
+    zones = yaml.get('zones')
+    if zones:
+        data['zones'] = zones
+
     roles = yaml.get('roles')
     if roles:
         data['roles'] = _parse_roles(roles, domain=domain)

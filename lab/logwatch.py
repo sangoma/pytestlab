@@ -32,7 +32,7 @@ class logfiles(object):
         self.ctl = ctl
         self.ssh = get_ssh(ctl)
         self.logtable = tables
-        self.ident = '@'.join((type(ctl).__name__, ctl.location.hostname))
+        self.ident = ctl.hostname
 
     def iterlogs(self):
         """Iterate through all log rotation based variations of a log

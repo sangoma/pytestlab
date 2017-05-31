@@ -42,7 +42,6 @@ setup_params = dict(
     install_requires=[
         'SQLAlchemy',
         'cached-property',
-        'cliff',
         'colorlog',
         'contextlib2',
         'docker',
@@ -52,10 +51,8 @@ setup_params = dict(
         'pyroute2',
         'pytest',
         'python-etcd',
-        'pyxdg',
         'pyyaml',
         'rpyc',
-        'srvlookup',
         'execnet',
     ],
     extras_require={
@@ -78,6 +75,7 @@ setup_params = dict(
             'rpc=plugins.rpc',
             'api=plugins.api',
             'docker=plugins.docker',
+            'locker=plugins.locker',
         ]
     }
 )
