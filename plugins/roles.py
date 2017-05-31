@@ -92,7 +92,7 @@ def pytest_configure(config):
 
 
 def pytest_lab_map(config, roles):
-    labconfig = pytest.data.find('lab2.yaml')
+    labconfig = pytest.data.find('map.yaml')
     if not labconfig:
         return
 
