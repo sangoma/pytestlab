@@ -22,8 +22,11 @@ def pytest_lab_dispatch(config, identifier):
     pass
 
 
-@pytest.hookspec(firstresult=True)
-def pytest_lab_lock(config, identifier):
+def pytest_lab_aquire_lock(config, identifier):
+    pass
+
+
+def pytest_lab_release_lock(config, identifier):
     pass
 
 

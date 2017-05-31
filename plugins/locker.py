@@ -169,7 +169,7 @@ class Locker(object):
         # acquire
         lockid = get_lock_id(user)
         logger.info("{} is acquiring lock for {}".format(lockid, key))
-        self.backend.write(key, lockid, self.ttl)
+        self.backend.write(key, self.ttl, id=lockid)
         logger.debug("Locked {}:{}".format(key, lockid))
 
         # start keep-alive
@@ -199,8 +199,13 @@ class Locker(object):
         self.release_all()
 
     @pytest.hookimpl
-    def pytest_lab_lock(self, config, identifier):
+    def pytest_lab_aquire_lock(self, config, identifier):
         self.aquire(identifier)
+        return True
+
+    @pytest.hookimpl
+    def pytest_lab_release_lock(self, config, identifier):
+        self.release(identifier)
         return True
 
 
