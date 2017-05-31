@@ -10,7 +10,7 @@ from collections import namedtuple, OrderedDict, defaultdict
 from dns import rdatatype, resolver
 
 
-SRV = namedtuple('SRV', ['host', 'port', 'priority', 'weight'])
+SRV = namedtuple('SRV', 'host,port,priority,weight')
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,6 @@ logger = logging.getLogger(__name__)
 class ResourceLocked(Exception):
     """Attempt to lock a resource already locked by an external test session.
     """
-
-
-class TooManyLocks(Exception):
-    """This resource has already been locked by the current test session."""
 
 
 class SRVQueryFailure(Exception):
@@ -99,13 +95,9 @@ def _makekey(name):
     return posixpath.join('lab', 'locks', name)
 
 
-class Lock(object):
-    def __init__(self, key, **kwargs):
-        self.key = _makekey(key)
-        self.data = kwargs
-
-
 class EtcdLocker(object):
+    Lock = namedtuple('Lock', 'key,data,ttl')
+
     def __init__(self, discovery_srv):
         self.etcd = connect_to_etcd(discovery_srv)
         self.locks = {}
@@ -116,14 +108,13 @@ class EtcdLocker(object):
         except etcd.EtcdKeyNotFound:
             return None
 
-    def write(self, key, ttl, **lock_info):
-        lock = Lock(key, **lock_info)
-        self.etcd.write(lock.key, lock.data, ttl=ttl, prevexists=False)
-        self.locks[key] = lock
+    def write(self, key, ttl, **data):
+        self.etcd.write(key, data, ttl=ttl, prevexists=False)
+        self.locks[key] = self.Lock(key, data, ttl)
 
-    def refresh(self, key, ttl):
+    def refresh(self, key):
         lock = self.locks[key]
-        self.etcd.write(lock.key, lock.data, ttl=ttl, refresh=True)
+        self.etcd.write(lock.key, lock.data, ttl=lock.ttl, refresh=True)
 
     def release(self, key):
         lock = self.locks.pop(key)
@@ -178,7 +169,7 @@ class Locker(object):
                 while not self._stop.wait(self.ttl // 2):
                     for key in list(self.backend.locks):
                         logger.debug("Relocking {}".format(key))
-                        self.backend.refresh(key, self.ttl)
+                        self.backend.refresh(key)
 
             self._thread = threading.Thread(target=keepalive_worker)
             logger.critical("Starting keep-alive thread...")

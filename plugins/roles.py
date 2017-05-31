@@ -130,7 +130,7 @@ def pytest_lab_load_role(config, identifier, facts):
 
     __lock__ = getattr(module, '__lock__', None)
     if __lock__:
-        lock_identifier = __lock__(**facts)
+        lock_identifier = __lock__(factory, **facts)
         config.hook.pytest_lab_aquire_lock(config=config, identifier=lock_identifier)
 
 
