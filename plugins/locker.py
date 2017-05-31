@@ -116,8 +116,8 @@ class EtcdLocker(object):
         except etcd.EtcdKeyNotFound:
             return None
 
-    def write(self, key, lock, ttl):
-        lock = Lock(key, locker=lock)
+    def write(self, key, ttl, **lock_info):
+        lock = Lock(key, **lock_info)
         self.etcd.write(lock.key, lock.data, ttl=ttl, prevexists=False)
         self.locks[key] = lock
 
@@ -142,20 +142,17 @@ def get_lock_id(user=None):
 
 
 class Locker(object):
-    def __init__(self, config, backend):
+    def __init__(self, config, backend, ttl=30):
         self.config = config
         self.backend = backend
-
-        self.ttl = 30  # XXX: FIX
-
-        self._stop = threading.Event()
+        self.ttl = ttl
         self._thread = None
+        self._stop = threading.Event()
 
     def aquire(self, key, user=None):
         record = self.backend.read(key)
 
         if record and record.ttl:
-            print("MESSAGE TTL={}".format(record.ttl))
             logger.error('{} is locked by {}, waiting {} seconds for lock '
                          'to expire...'.format(key, record.value, record.ttl + 1))
             start = time.time()
@@ -164,7 +161,8 @@ class Locker(object):
                 if not record:
                     break
                 time.sleep(0.5)
-        elif record:
+
+        if record:
             raise ResourceLocked(
                 '{} is currently locked by {}'.format(key, record.value))
 
@@ -176,22 +174,25 @@ class Locker(object):
 
         # start keep-alive
         if not self._thread or not self._thread.is_alive():
-            self._thread = threading.Thread(target=self._keepalive)
+            def keepalive_worker():
+                while not self._stop.wait(self.ttl // 2):
+                    for key in list(self.backend.locks):
+                        logger.debug("Relocking {}".format(key))
+                        self.backend.refresh(key, self.ttl)
+
+            self._thread = threading.Thread(target=keepalive_worker)
+            logger.critical("Starting keep-alive thread...")
             self._thread.start()
 
         return key, lockid
+
+    def release(self, key):
+        self.backend.relaese(key)
 
     def release_all(self):
         self._stop.set()
         for key in list(self.backend.locks):
             self.backend.release(key)
-
-    def _keepalive(self):
-        logger.critical("Starting keep-alive thread...")
-        while not self._stop.wait(self.ttl // 2):
-            for key in list(self.backend.locks):
-                logger.warning("Relocking {}".format(key))
-                self.backend.refresh(key, self.ttl)
 
     @pytest.hookimpl
     def pytest_unconfigure(self, config):
@@ -199,7 +200,6 @@ class Locker(object):
 
     @pytest.hookimpl
     def pytest_lab_lock(self, config, identifier):
-        pytest.log.info("ATTEMPTING TO LOCK {}".format(identifier))
         self.aquire(identifier)
         return True
 
