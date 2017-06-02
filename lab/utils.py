@@ -8,11 +8,8 @@
 Handy utilities
 """
 from builtins import map
-from builtins import object
 import os
 import string
-import py
-import py.path
 
 
 PATTERN = string.ascii_letters + string.digits + '_' + '.'
@@ -47,51 +44,3 @@ def encode_path(path):
     if name[0] == '.':
         name = '\\x{:x}'.format(ord('.')) + name[1:]
     return name
-
-
-def exists(path, ignore=EnvironmentError):
-    try:
-        return path.check()
-    except ignore:
-        return False
-
-
-def get_common_ancestor(args):
-    # args are what we get after early command line parsing (usually
-    # strings, but can be py.path.local objects as well)
-    common_ancestor = None
-    for arg in args:
-        if str(arg)[0] == "-":
-            continue
-        p = py.path.local(arg)
-        if common_ancestor is None:
-            common_ancestor = p
-        else:
-            if p.relto(common_ancestor) or p == common_ancestor:
-                continue
-            elif common_ancestor.relto(p):
-                common_ancestor = p
-            else:
-                shared = p.common(common_ancestor)
-                if shared is not None:
-                    common_ancestor = shared
-    if common_ancestor is None:
-        common_ancestor = py.path.local()
-    elif not common_ancestor.isdir():
-        common_ancestor = common_ancestor.dirpath()
-    return common_ancestor
-
-
-def getcfg(args, inibasenames):
-    args = [x for x in args if not str(x).startswith("-")]
-    if not args:
-        args = [py.path.local()]
-    for arg in args:
-        arg = py.path.local(arg)
-        for base in arg.parts(reverse=True):
-            for inibasename in inibasenames:
-                p = base.join(inibasename)
-                if exists(p):
-                    #iniconfig = LabConfig(p)
-                    return base, p, {}
-    return None, None, None

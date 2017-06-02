@@ -7,16 +7,7 @@
 from builtins import object
 import importlib
 import pytest
-from lab import utils, config_v1
-
-
-class Data(object):
-    def __init__(self):
-        self.rootdir = '.'
-
-    def find(self, *filenames):
-        _, result, _ = utils.getcfg([self.rootdir], filenames)
-        return result
+from lab import config_v1
 
 
 class Roles(object):
@@ -62,8 +53,7 @@ class Dispatcher(object):
 @pytest.hookimpl
 def pytest_namespace():
     return {'roles': Roles(),
-            'dispatch': Dispatcher(),
-            'data': Data()}
+            'dispatch': Dispatcher()}
 
 
 @pytest.hookimpl
@@ -80,19 +70,15 @@ def pytest_addoption(parser):
 
 
 @pytest.hookimpl
-def pytest_load_initial_conftests(early_config, parser, args):
-    rootdir = utils.get_common_ancestor(args)
-    pytest.data.rootdir = rootdir
-
-
-@pytest.hookimpl
 def pytest_configure(config):
     pytest.dispatch.config = config
     pytest.roles.config = config
 
 
 def pytest_lab_map(config, roles):
-    labconfig = pytest.data.find('map.yaml')
+    labconfig = pytest.config.hook.pytest_lab_getcfg(config=config,
+                                                     filenames=['map.yaml'])
+
     if not labconfig:
         return
 

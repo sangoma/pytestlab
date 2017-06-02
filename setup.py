@@ -76,6 +76,7 @@ setup_params = dict(
             'api=plugins.api',
             'docker=plugins.docker',
             'locker=plugins.locker',
+            'data=plugins.data',
         ]
     }
 )
