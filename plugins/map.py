@@ -70,36 +70,6 @@ class Roles(object):
         return getattr(module, factory)(**facts)
 
 
-class MapFile(object):
-    def __init__(self, config, filename='map.yaml'):
-        mapfile = config.hook.pytest_lab_getcfg(config=config,
-                                                filenames=[filename])
-
-        self.config = config
-        self.mapdata = config_v1.load(mapfile) if mapfile else None
-
-    @pytest.hookimpl
-    def pytest_lab_map(self, config, roles):
-        if not self.mapdata:
-            return
-
-        environments, zones = self.mapdata
-        envname = config.getoption('--env')
-        zonename = config.getoption('--zone')
-
-        environment = environments.get(envname, {})
-
-        if not zonename:
-            env_zones = environment.get('zones')
-            if env_zones:
-                zonename = env_zones[0]
-
-        zone = zones.get(zonename, {})
-
-        roles.load(environment.get('roles', {}),
-                   zone.get('roles', {}))
-
-
 class Dispatcher(object):
     def __init__(self, config):
         self.config = config
@@ -137,8 +107,39 @@ def pytest_addoption(parser):
 @pytest.hookimpl
 def pytest_configure(config):
     config.pluginmanager.register(Roles(config))
-    config.pluginmanager.register(MapFile(config))
     config.pluginmanager.register(Dispatcher(config))
+
+
+@pytest.hookimpl
+def pytest_lab_map(config, roles):
+    mapfile = config.hook.pytest_lab_getcfg(config=config,
+                                            filenames=['map.yaml'])
+
+    mapdata = config_v1.load(mapfile) if mapfile else None
+    if not mapdata:
+        return
+
+    environments, zones = mapdata
+    envname = config.getoption('--env')
+    zonename = config.getoption('--zone')
+
+    environment = environments.get(envname, {})
+
+    if not zonename:
+        env_zones = environment.get('zones')
+        if env_zones:
+            zonename = env_zones[0]
+
+    zone = zones.get(zonename, {})
+
+    locker = zone.get('locker')
+    if locker and locker.get('service') == 'etcd':
+        from .locker import EtcdLocker, Locker
+        etcd = EtcdLocker(zonename)
+        config.pluginmanager.register(Locker(config, etcd))
+
+    roles.load(environment.get('roles', {}),
+               zone.get('roles', {}))
 
 
 @pytest.fixture(scope='session')

@@ -180,9 +180,3 @@ class Locker(object):
     def pytest_lab_release_lock(self, config, identifier):
         self.release(identifier)
         return True
-
-
-@pytest.hookimpl
-def pytest_configure(config):
-    etcd = EtcdLocker('qa.sangoma.local')
-    config.pluginmanager.register(Locker(config, etcd))

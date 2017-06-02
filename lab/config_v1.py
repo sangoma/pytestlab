@@ -82,9 +82,9 @@ def _parse_providers(providers):
 
 def _parse_common(yaml, domain=None):
     data = {}
-    lock = yaml.get('lock')
+    lock = yaml.get('locker')
     if lock:
-        data['lock'] = lock
+        data['locker'] = lock
 
     zones = yaml.get('zones')
     if zones:
