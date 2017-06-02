@@ -154,7 +154,7 @@ class Locker(object):
                         self.backend.refresh(key)
 
             self._thread = threading.Thread(target=keepalive_worker)
-            logger.critical("Starting keep-alive thread...")
+            logger.debug("Starting keep-alive thread...")
             self._thread.start()
 
         return key, lockid
