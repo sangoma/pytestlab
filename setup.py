@@ -65,7 +65,7 @@ setup_params = dict(
     cmdclass={'test': PyTest},
     entry_points={
         'pytest11': [
-            'roles=plugins.roles',
+            'map=plugins.map',
             'futurize=plugins.futurize',
             '_storage=plugins.storage',
             'logwatch=plugins.logwatch',
