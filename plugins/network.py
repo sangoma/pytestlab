@@ -138,18 +138,6 @@ def ip_ver(addr_family):
         return 6
 
 
-@pytest.fixture(scope='session')
-def srv(request):
-    '''Lookup the location of a resource through dns SRV records.'''
-    import srvlookup
-    domain = request.config.getoption('--discovery-srv')
-
-    def lookup(service):
-        record = srvlookup.lookup(service, domain=domain)[0]
-        return (record.host, record.port)
-    return lookup
-
-
 def vlan_handle_error(err):
     '''Error handler for vlan creation failure, for friendlier error
     messages.'''
