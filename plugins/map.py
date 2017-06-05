@@ -10,6 +10,10 @@ import pytest
 from lab import config_v1
 
 
+class RoleNotFound(LookupError):
+    pass
+
+
 class Roles(object):
     def __init__(self, config):
         self.config = config
@@ -23,9 +27,9 @@ class Roles(object):
     def load(self, config, zone=None):
         self.data = config_v1.Union(config, zone=zone)
 
-    def __getitem__(self, key):
+    def aquire(self, key):
         if not self.data:
-            raise KeyError(key)
+            raise RoleNotFound(key)
 
         role = self.loaded.get(key)
         if not role:
