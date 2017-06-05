@@ -15,15 +15,17 @@ import errno
 import pytest
 import contextlib2
 from lab import network
+from plugins.map import RoleNotFound
 
 
 def calculate_addr_family(config):
     addr_family = []
     has_ipv4 = has_ipv6 = False
 
+    # XXX: WTF is this doing here?
     try:
-        dut = pytest.roles['nsc']
-    except KeyError:
+        dut = pytest.roles.aquire('nsc')
+    except RoleNotFound:
         has_ipv4 = True
     else:
         addrinfo = dut.addrinfo  # DNS lookup

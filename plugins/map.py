@@ -27,6 +27,20 @@ class Roles(object):
     def load(self, config, zone=None):
         self.data = config_v1.Union(config, zone=zone)
 
+    def enumerate(self, keys):
+        try:
+            for key in keys:
+                result = self.loaded.get(key)
+                if result:
+                    yield result
+        except TypeError:
+            result = self.loaded.get(keys)
+            if result:
+                yield result
+
+    def get(self, key, default=None):
+        self.loaded.get(key, default)
+
     def aquire(self, key):
         if not self.data:
             raise RoleNotFound(key)
@@ -49,7 +63,8 @@ class Roles(object):
 
     @pytest.hookimpl
     def pytest_namespace(self):
-        return {'roles': self}
+        return {'roles': self,
+                'RoleNotFound': RoleNotFound}
 
     @pytest.hookimpl
     def pytest_lab_load_role(self, config, identifier, facts):
