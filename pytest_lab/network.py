@@ -15,7 +15,7 @@ import errno
 import pytest
 import contextlib2
 from lab import network
-from plugins.map import RoleNotFound
+from pytest_lab.roles import RoleNotFound
 
 
 def calculate_addr_family(config):

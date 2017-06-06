@@ -65,19 +65,19 @@ setup_params = dict(
     cmdclass={'test': PyTest},
     entry_points={
         'pytest11': [
-            'map=plugins.map',
-            'roles=plugins.roles',
-            'futurize=plugins.futurize',
-            '_storage=plugins.storage',
-            'logwatch=plugins.logwatch',
-            'log=plugins.log',
-            'network=plugins.network',
-            'runnerctl=plugins.runnerctl',
-            'rpc=plugins.rpc',
-            'api=plugins.api',
-            'docker=plugins.docker',
-            'locker=plugins.locker',
-            'data=plugins.data',
+            'map=pytest_lab.map',
+            'roles=pytest_lab.roles',
+            'futurize=pytest_lab.futurize',
+            '_storage=pytest_lab.storage',
+            'logwatch=pytest_lab.logwatch',
+            'log=pytest_lab.log',
+            'network=pytest_lab.network',
+            'runnerctl=pytest_lab.runnerctl',
+            'rpc=pytest_lab.rpc',
+            'api=pytest_lab.api',
+            'docker=pytest_lab.docker',
+            'locker=pytest_lab.locker',
+            'data=pytest_lab.data',
         ]
     }
 )
