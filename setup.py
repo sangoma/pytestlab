@@ -66,6 +66,7 @@ setup_params = dict(
     entry_points={
         'pytest11': [
             'map=plugins.map',
+            'roles=plugins.roles',
             'futurize=plugins.futurize',
             '_storage=plugins.storage',
             'logwatch=plugins.logwatch',
