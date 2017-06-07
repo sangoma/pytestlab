@@ -6,6 +6,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from builtins import object
 import importlib
+import weakref
 import pytest
 from lab import config_v1
 
@@ -18,7 +19,7 @@ class Roles(object):
     def __init__(self, config):
         self.config = config
         self.data = None
-        self.loaded = {}
+        self.loaded = weakref.WeakValueDictionary()
 
         self.config.hook.pytest_lab_map.call_historic(
             kwargs=dict(config=self.config, roles=self)
