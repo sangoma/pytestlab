@@ -110,6 +110,10 @@ class StorageManager(object):
                 localfile.write(contents)
                 pytest.log.info('Archived {}'.format(filename))
 
+    @pytest.hookimpl
+    def pytest_lab_get_storage(self, item):
+        return self.get_storage(item)
+
 
 def pytest_addoption(parser):
     group = parser.getgroup('storage')
@@ -126,8 +130,7 @@ def pytest_cmdline_main(config):
 
 @pytest.fixture
 def storage(request):
-    store = request.config.pluginmanager.getplugin("storage")
-    return store.get_storage(request.node)
+    return request.config.hook.pytest_lab_get_storage(item=request.node)
 
 
 @pytest.fixture(scope='session')

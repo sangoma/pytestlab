@@ -73,3 +73,7 @@ def pytest_lab_location_destroyed(config, location):
 def pytest_lab_add_providers(config, providermanager):
     """Called to enable adding addtional/external environment providers.
     """
+
+@pytest.hookspec(firstresult=True)
+def pytest_lab_get_storage(item):
+    pass
