@@ -65,6 +65,9 @@ class Roles(object):
             self.config.hook.pytest_lab_role_created.call_historic(
                 kwargs=dict(config=self.config, name=key, role=role)
             )
+
+            # Register every role as a plugin to they can monitor hooks
+            self.config.pluginmanager.register(role)
         return role
 
     def __delitem__(self, key):
