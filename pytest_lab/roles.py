@@ -48,7 +48,11 @@ class Roles(object):
 
         role = self.loaded.get(key)
         if not role:
-            roledata = next(self.data[key].itervalues())
+            try:
+                roledata = next(self.data[key].itervalues())
+            except KeyError:
+                raise RoleNotFound(key)
+
             role = self.config.hook.pytest_lab_load_role(
                 config=self.config,
                 identifier=roledata.key,
