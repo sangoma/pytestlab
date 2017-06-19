@@ -71,28 +71,5 @@ def pytest_configure(config):
     pytest.logmanager = logmanager
     # allow plugins to register for log watching
     config.hook.pytest_lab_log_watch.call_historic(
-        kwargs=dict(logmanager=logmanager))
+        kwargs=dict(config=config, logmanager=logmanager))
     config.pluginmanager.register(logmanager, name='LogManager')
-
-
-def pytest_addhooks(pluginmanager):
-    """Add log watch plugin hooks spec.
-    """
-    class LogHooks:
-        @pytest.hookspec
-        def pytest_lab_process_logs(config, item, logs):
-            """Broadcast all collected log files and where it came from
-            to all subscribers.
-            """
-
-        @pytest.hookspec(historic=True)
-        def pytest_lab_log_watch(logmanager):
-            """Register a role ctl and a log file table to be watched and
-            processed.
-            """
-
-        @pytest.hookspec
-        def pytest_lab_log_rotate(config):
-            """Called to indicate to role plugins to rotate their logs."""
-
-    pluginmanager.add_hookspecs(LogHooks())

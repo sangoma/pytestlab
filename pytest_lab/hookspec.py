@@ -77,3 +77,19 @@ def pytest_lab_add_providers(config, providermanager):
 @pytest.hookspec(firstresult=True)
 def pytest_lab_get_storage(item):
     pass
+
+@pytest.hookspec
+def pytest_lab_process_logs(config, item, logs):
+    """Broadcast all collected log files and where it came from
+    to all subscribers.
+    """
+
+@pytest.hookspec(historic=True)
+def pytest_lab_log_watch(config, logmanager):
+    """Register a role ctl and a log file table to be watched and
+    processed.
+    """
+
+@pytest.hookspec
+def pytest_lab_log_rotate(config):
+    """Called to indicate to role plugins to rotate their logs."""
