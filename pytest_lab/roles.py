@@ -49,7 +49,7 @@ class Roles(object):
         role = self.loaded.get(key)
         if not role:
             try:
-                roledata = next(self.data[key].itervalues())
+                roledata = next(iter(self.data[key].values()))
             except KeyError:
                 raise RoleNotFound(key)
 
