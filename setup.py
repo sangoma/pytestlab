@@ -53,6 +53,7 @@ setup_params = dict(
         'python-etcd',
         'pyyaml',
         'rpyc',
+        'ruamel.yaml',
         'execnet',
     ],
     extras_require={
