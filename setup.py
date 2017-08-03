@@ -37,8 +37,8 @@ class PyTest(TestCommand):
 
 setup_params = dict(
     name='pytestlab',
-    version='0.1.0.alpha',
-    packages=setuptools.find_packages(),
+    version='0.1.0',
+    packages=setuptools.find_packages(exclude=("unittests",)),
     install_requires=[
         'SQLAlchemy',
         'cached-property',
