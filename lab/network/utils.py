@@ -48,7 +48,10 @@ try:
         for res in socket.getaddrinfo(dst, 0, family, socket.SOCK_STREAM, 0,
                                       socket.AI_PASSIVE | socket.AI_CANONNAME):
             family, socktype, proto, canonname, sa = res
-            addr = ipaddress.ip_address(sa[0])
+            try:
+                addr = ipaddress.ip_address(unicode(sa[0]))
+            except NameError:
+                addr = ipaddress.ip_address(sa[0])
             return addr, canonname
 
     def iter_addrs(data):

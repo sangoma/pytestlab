@@ -28,7 +28,7 @@ install_requires=[
     'rpyc',
     'ruamel.yaml',
     'execnet',
-],
+]
 
 
 try:
@@ -40,7 +40,7 @@ except ImportError:
 setup_params = dict(
     name='pytestlab',
     version='0.1.0.alpha',
-    packages=setuptools.find_packages(exclude=('unittests',)),
+    packages=setuptools.find_packages(exclude=('tests',)),
     install_requires=install_requires,
     extras_require={
         ':python_version < "3.0"': [

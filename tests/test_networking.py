@@ -12,7 +12,7 @@ from lab import network
 @pytest.fixture
 def dhcp_network():
     """The default Docker network"""
-    return ipaddress.IPv4Network('172.17.0.0/16')
+    return ipaddress.IPv4Network(u'172.17.0.0/16')
 
 
 @pytest.fixture
@@ -67,25 +67,25 @@ def macvlan(dhcpd4):
 
 
 @pytest.mark.parametrize('ip', [
-    '127.0.0.1',
-    '::1'
+    u'127.0.0.1',
+    u'::1'
 ])
 def test_ping(ip):
     network.ping(ip)
 
 
 @pytest.mark.parametrize('ip, expected', [
-    ('127.0.0.1', 4),
-    ('::1', 6)
+    (u'127.0.0.1', 4),
+    (u'::1', 6)
 ])
 def test_addr_version_detection(ip, expected):
     assert network.get_addr_version(ip) == expected
 
 
 @pytest.mark.parametrize('ip, version, expected', [
-    ('127.0.0.1', 4, ipaddress.IPv4Address('127.0.0.1')),
-    ('::1', 6, ipaddress.IPv6Address('::1')),
-    ('localhost.localdomain', 4, ipaddress.IPv4Address('127.0.0.1'))
+    (u'127.0.0.1', 4, ipaddress.IPv4Address(u'127.0.0.1')),
+    (u'::1', 6, ipaddress.IPv6Address(u'::1')),
+    (u'localhost.localdomain', 4, ipaddress.IPv4Address(u'127.0.0.1'))
 ])
 def test_check_ipaddr(ip, version, expected):
     assert network.check_ipaddr(ip, version=version) == (expected, ip)

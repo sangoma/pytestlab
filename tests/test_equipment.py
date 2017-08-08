@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import pytest
 from lab.model import Facts
-from unittests.mocks.lab import MockProvider
+from tests.mocks.lab import MockProvider
 
 
 @pytest.fixture
