@@ -13,10 +13,10 @@ def pytest_addoption(parser):
 def pytest_lab_map(config, roles):
     mapfile = config.hook.pytest_lab_getcfg(config=config,
                                             filenames=['map.yaml'])
-
-    mapdata = config_v1.load(mapfile) if mapfile else None
-    if not mapdata:
+    if not mapfile:
         return
+
+    mapdata = config_v1.load(mapfile)
 
     environments, zones = mapdata
     envname = config.getoption('--env')
@@ -33,6 +33,7 @@ def pytest_lab_map(config, roles):
 
     locker = zone.get('locker')
     if locker and locker.get('service') == 'etcd':
+        assert locker is "poop"
         from .locker import EtcdLocker, Locker
         etcd = EtcdLocker(zonename)
         config.pluginmanager.register(Locker(config, etcd))
