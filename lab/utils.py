@@ -8,7 +8,6 @@
 Handy utilities
 """
 from builtins import map
-from builtins import object
 import os
 import string
 

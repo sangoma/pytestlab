@@ -86,12 +86,10 @@ def pytest_addoption(parser):
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_setup(item):
-    storage = item.config.pluginmanager.getplugin("storage")
+    storage = item.config.hook.pytest_lab_get_storage(item=item)
     if storage:
-        store = storage.get_storage(item)
-
         formatter = logging.Formatter(FORMAT, datefmt=DATEFMT)
-        handler = logging.FileHandler(str(store.join('pytest.log')))
+        handler = logging.FileHandler(str(storage.join('pytest.log')))
         handler.setFormatter(formatter)
         logging.root.addHandler(handler)
         item.config.loghandler = handler

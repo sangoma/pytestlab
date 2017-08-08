@@ -12,7 +12,7 @@ import re
 import plumbum
 import py
 import itertools
-from .utils import encode_path
+from lab.utils import encode_path
 
 
 def sanitized_name(name):
@@ -94,7 +94,7 @@ class StorageManager(object):
     @pytest.hookimpl
     def pytest_lab_process_logs(self, config, item, logs):
         for ctl, logset in logs.items():
-            prefix_path = '@'.join((ctl.name, ctl.location.hostname))
+            prefix_path = '@'.join((ctl.name, ctl.hostname))
             prefix_dir = self.get_storage(item).join('logs').join(prefix_path)
             prefix_dir.mkdir()
 
@@ -109,6 +109,10 @@ class StorageManager(object):
                 localfile = prefix_dir.join(absname)
                 localfile.write(contents)
                 pytest.log.info('Archived {}'.format(filename))
+
+    @pytest.hookimpl
+    def pytest_lab_get_storage(self, item):
+        return self.get_storage(item)
 
 
 def pytest_addoption(parser):
@@ -126,8 +130,7 @@ def pytest_cmdline_main(config):
 
 @pytest.fixture
 def storage(request):
-    store = request.config.pluginmanager.getplugin("storage")
-    return store.get_storage(request.node)
+    return request.config.hook.pytest_lab_get_storage(item=request.node)
 
 
 @pytest.fixture(scope='session')

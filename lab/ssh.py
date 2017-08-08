@@ -50,19 +50,19 @@ def walk(self, remotepath):
             yield x
 
 
-def get_paramiko_sftp(location, **kwargs):
-    ssh = get_paramiko_ssh(location, **kwargs)
+def get_paramiko_sftp(hostname, **kwargs):
+    ssh = get_paramiko_ssh(hostname, **kwargs)
     return ssh.sftp
 
 
-def get_paramiko_ssh(location, **kwargs):
+def get_paramiko_ssh(hostname, **kwargs):
     from paramiko import AutoAddPolicy
     from plumbum.machines.paramiko_machine import ParamikoMachine
 
-    password = location.facts.get('password')
-    keyfile = location.facts.get('keyfile')
-    settings = {'user': location.facts.get('user', 'root'),
-                'port': location.facts.get('port', 22),
+    password = kwargs.get('password')
+    keyfile = kwargs.get('keyfile')
+    settings = {'user': kwargs.get('user', 'root'),
+                'port': kwargs.get('port', 22),
                 'look_for_keys': False,
                 'missing_host_policy': AutoAddPolicy(),
                 'keep_alive': 60}
@@ -72,19 +72,18 @@ def get_paramiko_ssh(location, **kwargs):
     if keyfile:
         settings['keyfile'] = keyfile
 
-    ssh = ParamikoMachine(location.hostname, **settings)
+    ssh = ParamikoMachine(hostname, **settings)
     ssh.sftp.walk = types.MethodType(walk, ssh.sftp)
     return ssh
 
 
-def get_generic_sftp(location, **kwargs):
+def get_generic_sftp(hostname, **kwargs):
     import paramiko
 
-    hostname = location.hostname
-    port = location.facts.get('port', 22)
-    username = location.facts.get('user', 'root')
-    password = location.facts.get('password')
-    keyfile = location.facts.get('keyfile')
+    port = kwargs.get('port', 22)
+    username = kwargs.get('user', 'root')
+    password = kwargs.get('password')
+    keyfile = kwargs.get('keyfile')
 
     def get_transport(**kwargs):
         transport = paramiko.Transport(hostname, port)
@@ -130,18 +129,18 @@ def get_generic_sftp(location, **kwargs):
     return get_sftp(transport)
 
 
-def get_generic_ssh(location, **kwargs):
+def get_generic_ssh(hostname, **kwargs):
     from plumbum import SshMachine
 
-    password = location.facts.get('password')
-    keyfile = location.facts.get('keyfile')
-    settings = {'user': location.facts.get('user', 'root'),
-                'port': location.facts.get('port', 22),
+    password = kwargs.get('password')
+    keyfile = kwargs.get('keyfile')
+    settings = {'user': kwargs.get('user', 'root'),
+                'port': kwargs.get('port', 22),
                 'ssh_opts': SSH_OPTS,
                 'scp_opts': SSH_OPTS}
 
     if password:
-        settings['password'] = location.facts.get('password')
+        settings['password'] = kwargs.get('password')
 
     if keyfile:
         keyfile = os.path.expanduser(keyfile)
@@ -149,9 +148,9 @@ def get_generic_ssh(location, **kwargs):
         log.debug("Attempting to auth ssh with keyfile {}".format(keyfile))
         settings['keyfile'] = keyfile
     elif password:
-        settings['password'] = location.facts.get('password')
+        settings['password'] = kwargs.get('password')
 
-    ssh = SshMachine(location.hostname, **settings)
+    ssh = SshMachine(hostname, **settings)
     return ssh
 
 

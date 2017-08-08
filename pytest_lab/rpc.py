@@ -12,7 +12,7 @@ import importlib
 from builtins import object
 from contextlib import contextmanager
 import pytest
-from ..comms import connection
+from lab.comms import connection
 from rpyc.utils.zerodeploy import DeployedServer
 import execnet
 
@@ -160,7 +160,7 @@ class Execnet(object):
         return channel.receive()
 
 
-@pytest.hookimpl
-def pytest_lab_addroles(rolemanager):
-    rolemanager.register('rpyc', RPyCCtl)
-    rolemanager.register('execnet', Execnet)
+# @pytest.hookimpl
+# def pytest_lab_addroles(rolemanager):
+#     rolemanager.register('rpyc', RPyCCtl)
+#     rolemanager.register('execnet', Execnet)

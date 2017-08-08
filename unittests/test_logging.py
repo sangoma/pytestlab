@@ -22,7 +22,7 @@ def test_logwatch_source(testdir):
         mocksource.ctl.location.hostname = 'localhost'
 
         @pytest.hookimpl
-        def pytest_lab_log_watch(logmanager):
+        def pytest_lab_log_watch(config, logmanager):
             logmanager.register(mocksource)
             mocksource.prepare.assert_called_once_with()
             mocksource.prepare.reset_mock()
@@ -68,7 +68,7 @@ def test_reliable_logwatch(testdir, alpine_ssh):
             logwatched = False
             name = 'mock'
 
-            def pytest_lab_log_watch(self, logmanager):
+            def pytest_lab_log_watch(self, config, logmanager):
                 # register for a fake log that shouldn't exist
                 logmanager.register(logfiles(self, ('/tmp/', ['fakelog.log'])))
                 self.logwatched = True

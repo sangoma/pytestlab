@@ -7,6 +7,34 @@
 import pytest
 
 
+@pytest.hookspec(historic=True)
+def pytest_lab_map(config, roles):
+    pass
+
+
+@pytest.hookspec(firstresult=True)
+def pytest_lab_load_role(config, identifier, facts):
+    pass
+
+
+@pytest.hookspec(firstresult=True)
+def pytest_lab_dispatch(config, identifier):
+    pass
+
+
+def pytest_lab_aquire_lock(config, identifier):
+    pass
+
+
+def pytest_lab_release_lock(config, identifier):
+    pass
+
+
+@pytest.hookspec(firstresult=True)
+def pytest_lab_getcfg(config, filenames):
+    pass
+
+
 @pytest.hookspec
 def pytest_lab_configure(envmanager):
     """pytestlab startup"""
@@ -23,14 +51,14 @@ def pytest_lab_addroles(config, rolemanager):
 # canonical list of roles should talk directly to the role manager
 # instead.
 @pytest.hookspec(historic=True)
-def pytest_lab_role_created(config, ctl):
+def pytest_lab_role_created(config, name, role):
     """Called when a new role controller is created (and loaded) at a
     location.
     """
 
 
 @pytest.hookspec
-def pytest_lab_role_destroyed(config, ctl):
+def pytest_lab_role_destroyed(config, role):
     """Called when a role controller is destroyed.
     """
 
@@ -45,3 +73,23 @@ def pytest_lab_location_destroyed(config, location):
 def pytest_lab_add_providers(config, providermanager):
     """Called to enable adding addtional/external environment providers.
     """
+
+@pytest.hookspec(firstresult=True)
+def pytest_lab_get_storage(item):
+    pass
+
+@pytest.hookspec
+def pytest_lab_process_logs(config, item, logs):
+    """Broadcast all collected log files and where it came from
+    to all subscribers.
+    """
+
+@pytest.hookspec(historic=True)
+def pytest_lab_log_watch(config, logmanager):
+    """Register a role ctl and a log file table to be watched and
+    processed.
+    """
+
+@pytest.hookspec
+def pytest_lab_log_rotate(config):
+    """Called to indicate to role plugins to rotate their logs."""

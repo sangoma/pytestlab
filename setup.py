@@ -13,79 +13,56 @@ import setuptools
 from setuptools.command.test import test as TestCommand
 
 
-class PyTest(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+install_requires=[
+    'SQLAlchemy',
+    'cached-property',
+    'colorlog',
+    'contextlib2',
+    'docker',
+    'paramiko',
+    'plumbum',
+    'pyroute2',
+    'pytest',
+    'python-etcd',
+    'pyyaml',
+    'rpyc',
+    'ruamel.yaml',
+    'execnet',
+],
 
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = []
 
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        # import here, cause outside the eggs aren't loaded
-        import sys
-        import shlex
-        import pytest
-
-        errno = pytest.main(['tests/'] + shlex.split(self.pytest_args or ''))
-        sys.exit(errno)
+try:
+    import ipaddress
+except ImportError:
+    install_requires.append('ipaddress')
 
 
 setup_params = dict(
     name='pytestlab',
-    version='0.1.0',
-    packages=setuptools.find_packages(exclude=("unittests",)),
-    install_requires=[
-        'SQLAlchemy',
-        'cached-property',
-        'cliff',
-        'colorlog',
-        'contextlib2',
-        'docker',
-        'ipaddress',
-        'paramiko',
-        'plumbum',
-        'pyroute2',
-        'pytest',
-        'python-etcd',
-        'pyxdg',
-        'pyyaml',
-        'rpyc',
-        'srvlookup',
-        'execnet',
-    ],
+    version='0.1.0.alpha',
+    packages=setuptools.find_packages(exclude=('unittests',)),
+    install_requires=install_requires,
     extras_require={
         ':python_version < "3.0"': [
             'future'
         ],
     },
     tests_require=['pytest'],
-    setup_requires=['setuptools>=17.1'],
-    cmdclass={'test': PyTest},
     entry_points={
-        'console_scripts': ['labctl=lab.app.__main__:main'],
-        'labctl': [
-            'show=lab.app.environments:EnvLister',
-            'env=lab.app.environments:EnvLister',
-            'add=lab.app.environments:EnvRegister',
-            'rm=lab.app.environments:EnvUnregister',
-            'facts=lab.app.facts:FactsLister',
-        ],
         'pytest11': [
-            'lab.roles=lab.roles',
-            'futurize=lab.futurize',
-            'lab._storage=lab.storage',
-            'lab.logwatch=lab.logwatch',
-            'lab.log=lab.log',
-            'lab.network=lab.network.plugin',
-            'lab.runnerctl=lab.runnerctl',
-            'lab.rpc=lab.ctl.rpc',
-            'lab.api=lab.api',
-            'lab.docker=lab.docker',
+            'map=pytest_lab.map',
+            'roles=pytest_lab.roles',
+            'futurize=pytest_lab.futurize',
+            '_storage=pytest_lab.storage',
+            'logwatch=pytest_lab.logwatch',
+            'log=pytest_lab.log',
+            'network=pytest_lab.network',
+            'runnerctl=pytest_lab.runnerctl',
+            'rpc=pytest_lab.rpc',
+            'api=pytest_lab.api',
+            'docker=pytest_lab.docker',
+            'locker=pytest_lab.locker',
+            'data=pytest_lab.data',
         ]
     }
 )
