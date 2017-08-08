@@ -17,16 +17,15 @@ class MyCtl(object):
     ssh = comms.connection('ssh')
 
 
-class Plugin:
-    """Plugin namespace.
-    """
-    @pytest.hookimpl
-    def pytest_lab_addroles(self, config, rolemanager):
-        rolemanager.register('myctl', MyCtl)
-
-
 @pytest.fixture(scope='session')
 def localhost(pytestconfig):
+    class Plugin:
+        """Plugin namespace.
+        """
+        @pytest.hookimpl
+        def pytest_lab_addroles(self, config, rolemanager):
+            rolemanager.register('myctl', MyCtl)
+
     pytestconfig.pluginmanager.register(Plugin())
     return pytest.env.manage(
         'localhost', facts={'port': 2222, 'password': 'root'})

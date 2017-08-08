@@ -158,9 +158,3 @@ class Execnet(object):
         channel = self.gw.remote_exec(
             src + REMOTE_EXEC_CHECK + invoke_line)
         return channel.receive()
-
-
-# @pytest.hookimpl
-# def pytest_lab_addroles(rolemanager):
-#     rolemanager.register('rpyc', RPyCCtl)
-#     rolemanager.register('execnet', Execnet)

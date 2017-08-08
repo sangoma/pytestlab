@@ -40,11 +40,6 @@ def pytest_lab_configure(envmanager):
     """pytestlab startup"""
 
 
-@pytest.hookspec(historic=True)
-def pytest_lab_addroles(config, rolemanager):
-    """new role registered"""
-
-
 # TODO: Hook for publishing new role **should not** be historic - this
 # no longer makes sense. Roles can now disappear before the historic
 # hook can be triggered. Any plugin that cares about having a complete
