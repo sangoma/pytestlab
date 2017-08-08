@@ -13,57 +13,41 @@ import setuptools
 from setuptools.command.test import test as TestCommand
 
 
-class PyTest(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+install_requires=[
+    'SQLAlchemy',
+    'cached-property',
+    'colorlog',
+    'contextlib2',
+    'docker',
+    'paramiko',
+    'plumbum',
+    'pyroute2',
+    'pytest',
+    'python-etcd',
+    'pyyaml',
+    'rpyc',
+    'ruamel.yaml',
+    'execnet',
+],
 
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = []
 
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        # import here, cause outside the eggs aren't loaded
-        import sys
-        import shlex
-        import pytest
-
-        errno = pytest.main(['tests/'] + shlex.split(self.pytest_args or ''))
-        sys.exit(errno)
+try:
+    import ipaddress
+except ImportError:
+    install_requires.append('ipaddress')
 
 
 setup_params = dict(
     name='pytestlab',
     version='0.1.0.alpha',
     packages=setuptools.find_packages(),
-    install_requires=[
-        'SQLAlchemy',
-        'cached-property',
-        'colorlog',
-        'contextlib2',
-        'docker',
-        'ipaddress',
-        'paramiko',
-        'plumbum',
-        'pyroute2',
-        'pytest',
-        'python-etcd',
-        'pyyaml',
-        'rpyc',
-        'ruamel.yaml',
-        'execnet',
-    ],
+    install_requires=install_requires,
     extras_require={
         ':python_version < "3.0"': [
             'future'
         ],
     },
     tests_require=['pytest'],
-    setup_requires=['setuptools>=17.1'],
-    cmdclass={'test': PyTest},
     entry_points={
         'pytest11': [
             'map=pytest_lab.map',
