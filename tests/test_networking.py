@@ -98,13 +98,3 @@ def test_find_best_route(destination, version, expected):
     iface, addr = network.find_best_route(destination, version=version)
     assert iface == expected
     assert addr.version == version
-
-
-def test_macvlan(dhcpd4, dhcp_range, macvlan):
-    vlan = macvlan()
-    addresses = vlan.addresses
-    assert len(addresses) == 1
-
-    ipv4_addresses = addresses[socket.AF_INET]
-    assert len(ipv4_addresses) == 1
-    assert ipv4_addresses[0] in dhcp_range
