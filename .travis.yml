@@ -1,0 +1,14 @@
+language: python
+dist: precise
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
+
+install:
+  - pip install --upgrade setuptools pip
+  - pip install --upgrade pytest .
+
+script:
+  - python -m pytest tests/
