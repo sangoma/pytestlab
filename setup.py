@@ -9,6 +9,7 @@
 #   Tyler Goodlet <tgoodlet@gmail.com>
 #   Simon Gomizelj <simon@vodik.xyz>
 #
+import sys
 import setuptools
 from setuptools.command.test import test as TestCommand
 
@@ -30,6 +31,21 @@ install_requires=[
     'execnet',
 ]
 
+pytest_plugins = [
+    'map=pytest_lab.map',
+    'roles=pytest_lab.roles',
+    '_storage=pytest_lab.storage',
+    'logwatch=pytest_lab.logwatch',
+    'log=pytest_lab.log',
+    'network=pytest_lab.network',
+    'runnerctl=pytest_lab.runnerctl',
+    'rpc=pytest_lab.rpc',
+    'api=pytest_lab.api',
+    'docker=pytest_lab.docker',
+    'locker=pytest_lab.locker',
+    'data=pytest_lab.data',
+]
+
 
 try:
     import ipaddress
@@ -37,35 +53,16 @@ except ImportError:
     install_requires.append('ipaddress')
 
 
-setup_params = dict(
+if sys.version_info < (3, 0):
+    install_requires.append('future')
+    pytest_plugins.append('futurize=pytest_lab.futurize')
+
+
+setuptools.setup(
     name='pytestlab',
     version='0.1.0.alpha',
     packages=setuptools.find_packages(exclude=('tests',)),
     install_requires=install_requires,
-    extras_require={
-        ':python_version < "3.0"': [
-            'future'
-        ],
-    },
     tests_require=['pytest'],
-    entry_points={
-        'pytest11': [
-            'map=pytest_lab.map',
-            'roles=pytest_lab.roles',
-            'futurize=pytest_lab.futurize',
-            '_storage=pytest_lab.storage',
-            'logwatch=pytest_lab.logwatch',
-            'log=pytest_lab.log',
-            'network=pytest_lab.network',
-            'runnerctl=pytest_lab.runnerctl',
-            'rpc=pytest_lab.rpc',
-            'api=pytest_lab.api',
-            'docker=pytest_lab.docker',
-            'locker=pytest_lab.locker',
-            'data=pytest_lab.data',
-        ]
-    }
+    entry_points={'pytest11': pytest_plugins}
 )
-
-if __name__ == '__main__':
-    setuptools.setup(**setup_params)
