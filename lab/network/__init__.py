@@ -87,7 +87,10 @@ def ping(addr):
     ----------
     addr : str, IPv4 or v6  address you want to ping in dotted decimal
     '''
-    ping = ping_cmds[utils.get_addr_version(addr)]
+    ping = ping_cmds.get(utils.get_addr_version(addr))
+    if not ping:
+        raise RuntimeError('No suitable ping binary found')
+
     try:
         print(ping('-c', '1', addr, timeout=1))
     except (plumbum.ProcessExecutionError, plumbum.ProcessTimedOut):

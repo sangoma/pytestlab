@@ -10,8 +10,15 @@ import plumbum
 # More recent versions iputils merged the two ping commands. Attempt to
 # support both the older and newer versions
 try:
-    ping_cmds = {4: plumbum.local['ping'],
-                 6: plumbum.local['ping6']}
+    _ping = plumbum.local['ping']
 except plumbum.CommandNotFound:
-    ping_cmds = {4: plumbum.local['ping']['-4'],
-                 6: plumbum.local['ping']['-6']}
+    ping_cmds = {}
+else:
+    try:
+        _ping6 = plumbum.local['ping6']
+        _ping4 = _ping
+    except plumbum.CommandNotFound:
+        _ping6 = _ping['-6']
+        _ping4 = _ping['-4']
+
+    ping_cmds = {4: _ping4, 6: _ping6}
