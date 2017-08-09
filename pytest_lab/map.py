@@ -33,7 +33,6 @@ def pytest_lab_map(config, roles):
 
     locker = zone.get('locker')
     if locker and locker.get('service') == 'etcd':
-        assert locker is "poop"
         from .locker import EtcdLocker, Locker
         etcd = EtcdLocker(zonename)
         config.pluginmanager.register(Locker(config, etcd))
