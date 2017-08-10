@@ -7,8 +7,6 @@
 #
 # Adapted for our own use from
 # https://github.com/paramiko/paramiko/blob/master/demos/forward.py
-from future import standard_library
-standard_library.install_aliases()
 from builtins import object
 import select
 import logging
@@ -17,6 +15,13 @@ import threading
 import socketserver
 import plumbum
 from . import get_new_sock
+
+
+try:
+    from future import standard_library
+    standard_library.install_aliases()
+except ImportError:
+    pass
 
 
 logger = logging.getLogger(__name__)
