@@ -96,21 +96,19 @@ REMOTE_EXEC_CHECK = "if __name__ == '__channelexec__':"
 
 
 class Execnet(object):
-    def __init__(self, config, location, **kwargs):
-        self.config = config
-        self.location = location
-        self.gw = self.from_location(location)
+    def __init__(self, hostname, **kwargs):
+        self.hostname = hostname
+        self.gw = self.from_location(**kwargs)
         self._modsrc = {}
 
-    def makespec(self, location):
+    def makespec(self, **facts):
         # build gw spec
         spec = {}
-        spec['id'] = "@".join((self.__class__.__name__, location.hostname))
+        spec['id'] = "@".join((self.__class__.__name__, self.hostname))
         # ssh spec
-        facts = location.facts
         user = facts.get('user', facts.get('login', 'root'))
         sshspec = "{user}@{hostname}".format(user=user,
-                                             hostname=location.hostname)
+                                             hostname=self.hostname)
         keyfile = facts.get('keyfile')
         if keyfile:
             sshspec = "-i {} ".format(keyfile) + sshspec
@@ -119,8 +117,8 @@ class Execnet(object):
         spec['ssh'] = sshspec
         return spec
 
-    def from_location(self, location):
-        return self.from_specdict(self.makespec(location))
+    def from_location(self, **facts):
+        return self.from_specdict(self.makespec(**facts))
 
     def from_specdict(self, spec):
         return execnet.makegateway('//'.join(
