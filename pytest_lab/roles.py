@@ -59,6 +59,10 @@ class Roles(object):
                 facts=roledata.kwargs
             )
 
+            if not role:
+                raise LookupError("Failed to load a controller for "
+                                  "{}".format(roledata.key))
+
             role.name = key  # XXX: backwards compatability hack
             self.loaded[key] = role
 
@@ -99,7 +103,8 @@ class Roles(object):
                                                identifier=lock_identifier)
 
         pytest.log.info('Loading {}'.format(identifier))
-        return getattr(module, factory)(**facts)
+        function = getattr(module, factory, None)
+        return function(**facts) if function else None
 
 
 class Dispatcher(object):
