@@ -1,4 +1,9 @@
+import sys
 import enum
+
+
+if sys.version_info >= (3, 0):
+    ord = lambda x: x
 
 
 class DHCPOption(enum.IntEnum):

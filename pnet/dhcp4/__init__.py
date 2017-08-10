@@ -1,4 +1,5 @@
 import os
+import sys
 import struct
 import socket
 import enum
@@ -9,6 +10,10 @@ from .options import DHCPOption, Options
 
 
 COOKIE = b'c\x82Sc'  # [0x63, 0x82, 0x53, 0x63])
+
+
+if sys.version_info >= (3, 0):
+    ord = lambda x: x
 
 
 class DHCPOpCode(enum.IntEnum):
@@ -105,7 +110,7 @@ class DHCPPacket:
 
 def get_vendor_info():
     sysname, _, release, _, machine = os.uname()
-    return b'pydhcp4:{}-{}:{}'.format(sysname, release, machine)
+    return 'pydhcp4:{}-{}:{}'.format(sysname, release, machine)
 
 
 def get_client_id(chaddr):
