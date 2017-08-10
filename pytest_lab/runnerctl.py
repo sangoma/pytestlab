@@ -13,6 +13,12 @@ import signal
 import pytest
 
 
+try:
+    maketrans = str.maketrans
+except AttributeError:
+    maketrans = string.maketrans
+
+
 def exit_gracefully(signum, frame):
     raise pytest.exit('Interrupting from SIGTERM')
 
@@ -60,5 +66,4 @@ def testname(request):
     often used to provision remote sw profiles which live for the entirety
     of a test suite.
     """
-    return request.node.name.translate(
-        string.maketrans('\[', '__')).strip(']')
+    return request.node.name.translate(maketrans('\[', '__')).strip(']')
