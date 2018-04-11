@@ -123,9 +123,6 @@ class Locker(object):
         self._stop = threading.Event()
 
     def aquire(self, key, user=None):
-        lockid = get_lock_id(user)
-        return key, lockid
-
         record = self.backend.read(key)
 
         if record and record.ttl:
