@@ -60,7 +60,7 @@ if sys.version_info < (3, 0):
 
 setuptools.setup(
     name='pytestlab',
-    version='1.0.3',
+    version='1.0.4',
     packages=setuptools.find_packages(exclude=('tests',)),
     install_requires=install_requires,
     tests_require=['pytest'],
