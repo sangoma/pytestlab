@@ -84,9 +84,11 @@ class MacVLan(object):
             if addr.is_link_local:
                 continue
             elif addr.version == 4:
-                data.setdefault(socket.AF_INET, []).append(addr)
+                values = data.setdefault(socket.AF_INET, [])
+                values.append(addr), values.append(prefix)
             elif addr.version == 6:
-                data.setdefault(socket.AF_INET6, []).append(addr)
+                values = data.setdefault(socket.AF_INET6, [])
+                values.append(addr), values.append(prefix)
 
         return data
 
@@ -98,7 +100,7 @@ class MacVLan(object):
             # again in a bit
             addrs = self.addresses.get(family, None)
             if addrs:
-                return addrs[0]
+                return addrs
             time.sleep(1)
 
         family_name = 'ipv4' if family == socket.AF_INET else 'ipv6'
