@@ -94,4 +94,10 @@ def vlan_set(primary_iface):
 @pytest.fixture(scope='class')
 def vlan_addr(vlan, addr_family):
     '''Return the correct ip address for the macvlan interface'''
-    return vlan.get_address(addr_family).compressed
+    return vlan.get_address(addr_family)[0].compressed
+
+
+@pytest.fixture(scope='class')
+def vlan_mask(vlan, addr_family):
+    '''Return the correct network mask for the macvlan interface'''
+    return vlan.get_address(addr_family)[1]
