@@ -173,7 +173,16 @@ class Locker(object):
 
     @pytest.hookimpl
     def pytest_lab_aquire_lock(self, config, identifier):
-        self.aquire(identifier)
+        wait_on_lock = config.getoption('--wait-on-locks')
+        if not wait_on_lock:
+            self.aquire(identifier)
+        else:
+            while wait_on_lock:
+                try:
+                    if self.acquire(identifier):
+                        break
+                except ResourceLocked:
+                    pass
         return True
 
     @pytest.hookimpl
