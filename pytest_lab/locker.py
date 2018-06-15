@@ -114,6 +114,12 @@ class EtcdLocker(object):
             pass
 
 
+@pytest.hookimpl
+def pytest_addoption(parser):
+    parser.addoption('--wait-on-locks', action='store_true', default=False,
+                     help='Wait for the locks until it is available')
+
+
 class Locker(object):
     def __init__(self, config, backend, ttl=30):
         self.config = config
@@ -173,7 +179,16 @@ class Locker(object):
 
     @pytest.hookimpl
     def pytest_lab_aquire_lock(self, config, identifier):
-        self.aquire(identifier)
+        wait_on_lock = config.getoption('--wait-on-locks')
+        if not wait_on_lock:
+            self.aquire(identifier)
+        else:
+            while wait_on_lock:
+                try:
+                    if self.aquire(identifier):
+                        break
+                except ResourceLocked:
+                    pass
         return True
 
     @pytest.hookimpl
